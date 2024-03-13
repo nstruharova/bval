@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -73,10 +72,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class GenerateSplits implements KeywordExecutable {
   private static final Logger log = LoggerFactory.getLogger(GenerateSplits.class);
 
-  private static final Set<Character> allowedChars = new HashSet<>();
-
-  private static final String encodeFlag = "-b64";
-
   static class Opts extends ConfigOpts {
     @Parameter(names = {"-n", "--num"},
         description = "The number of split points to generate. Can be used to create n+1 tablets. Cannot use with the split size option.")
@@ -86,8 +81,7 @@ public class GenerateSplits implements KeywordExecutable {
         description = "The minimum split size in uncompressed bytes. Cannot use with num splits option.")
     public long splitSize = 0;
 
-    @Parameter(names = {encodeFlag, "--base64encoded"},
-        description = "Base 64 encode the split points")
+    @Parameter(names = {"-b64", "--base64encoded"}, description = "Base 64 encode the split points")
     public boolean base64encode = false;
 
     @Parameter(names = {"-sf", "--splits-file"}, description = "Output the splits to a file")
@@ -95,7 +89,6 @@ public class GenerateSplits implements KeywordExecutable {
 
     @Parameter(description = "<file|directory>[ <file|directory>...] -n <num> | -ss <split_size>")
     public List<String> files = new ArrayList<>();
-
   }
 
   @Override
@@ -150,20 +143,6 @@ public class GenerateSplits implements KeywordExecutable {
       throw new IllegalArgumentException("No files were found in " + opts.files);
     } else {
       log.trace("Found the following files: {}", filePaths);
-    }
-
-    if (!encode) {
-      // Generate the allowed Character set
-      for (int i = 0; i < 10; i++) {
-        // 0-9
-        allowedChars.add((char) (i + 48));
-      }
-      for (int i = 0; i < 26; i++) {
-        // Uppercase A-Z
-        allowedChars.add((char) (i + 65));
-        // Lowercase a-z
-        allowedChars.add((char) (i + 97));
-      }
     }
 
     // if no size specified look at indexed keys first
@@ -277,15 +256,16 @@ public class GenerateSplits implements KeywordExecutable {
     if (encode) {
       return Base64.getEncoder().encodeToString(bytes);
     } else {
+      // drop non printable characters
       StringBuilder sb = new StringBuilder();
       for (byte aByte : bytes) {
         int c = 0xff & aByte;
-        if (allowedChars.contains((char) c)) {
+        if (c == '\\') {
+          sb.append("\\\\");
+        } else if (c >= 32 && c <= 126) {
           sb.append((char) c);
         } else {
-          // Fail if non-printable characters are detected.
-          throw new UnsupportedOperationException("Non printable char: \\x" + Integer.toHexString(c)
-              + " detected. Must use Base64 encoded output.  The behavior around non printable chars changed in 2.1.3 to throw an error, the previous behavior was likely to cause bugs.");
+          log.debug("Dropping non printable char: \\x{}", Integer.toHexString(c));
         }
       }
       return sb.toString();
