@@ -24,19 +24,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
-import javax.validation.ClockProvider;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ParameterNameProvider;
-import javax.validation.TraversableResolver;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.ConfigurationState;
-import javax.validation.valueextraction.ValueExtractor;
+import jakarta.validation.ClockProvider;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.TraversableResolver;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.ConfigurationState;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.groups.GroupsComputer;
@@ -99,6 +100,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private final DescriptorManager descriptorManager = new DescriptorManager(this);
     private final MetadataBuilders metadataBuilders = new MetadataBuilders();
     private final ConstraintCached constraintsCache = new ConstraintCached();
+    private final Map<Class<?>, Class<?>> unwrappedClassCache = new ConcurrentHashMap<>();
     private final Collection<Closeable> toClose = new ArrayList<>();
     private final GroupsComputer groupsComputer = new GroupsComputer();
     private final ParticipantFactory participantFactory;
@@ -134,6 +136,10 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
         annotationsManager = new AnnotationsManager(this);
         loadAndVerifyUserCustomizations(configuration);
+    }
+
+    public Map<Class<?>, Class<?>> getUnwrappedClassCache() {
+        return unwrappedClassCache;
     }
 
     /**
@@ -368,6 +374,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             getMetadataBuilders().registerCustomBuilder((Class) t, (MetadataBuilder.ForBean) b);
         };
         participantFactory.loadServices(MetadataSource.class)
-            .forEach(ms -> ms.process(configuration, getConstraintsCache()::add, addBuilder));
+            .forEach(ms -> {
+                ms.initialize(this);
+                ms.process(configuration, getConstraintsCache()::add, addBuilder);
+            });
     }
 }

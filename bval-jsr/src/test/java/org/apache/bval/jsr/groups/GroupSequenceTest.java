@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.GroupDefinitionException;
-import javax.validation.GroupSequence;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.GroupDefinitionException;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.constraints.NotNull;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ValidationTestBase;
@@ -115,7 +115,7 @@ public class GroupSequenceTest extends ValidationTestBase {
         constraintViolations = validator.validate(book, First.class, Second.class, Last.class);
         ConstraintViolation<?> constraintViolation = constraintViolations.iterator().next();
         assertEquals(1, constraintViolations.size());
-        assertEquals("may not be empty", constraintViolation.getMessage());
+        assertEquals("must not be empty", constraintViolation.getMessage());
         assertEquals(book, constraintViolation.getRootBean());
         assertEquals(book.getTitle(), constraintViolation.getInvalidValue());
         assertEquals("title", constraintViolation.getPropertyPath().toString());
@@ -165,7 +165,7 @@ public class GroupSequenceTest extends ValidationTestBase {
         constraintViolations = validator.validate(book, Book.All.class);
         ConstraintViolation<?> constraintViolation = constraintViolations.iterator().next();
         assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolation.getMessage());
+        assertEquals("must not be empty", constraintViolation.getMessage());
         assertEquals(book, constraintViolation.getRootBean());
         assertEquals(book.getTitle(), constraintViolation.getInvalidValue());
         assertEquals("title", constraintViolation.getPropertyPath().toString());

@@ -21,19 +21,19 @@ package org.apache.bval.jsr.xml;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.UnmarshallerHandler;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.UnmarshallerHandler;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -59,7 +59,7 @@ import org.xml.sax.helpers.XMLFilterImpl;
  */
 public class SchemaManager {
     public static class Builder {
-        private final SortedMap<Key, Lazy<Schema>> data = new TreeMap<>();
+        private final Map<Key, Lazy<Schema>> data = new LinkedHashMap<>();
 
         public Builder add(String version, String ns, String resource) {
             data.put(new Key(version, ns), new Lazy<>(() -> SchemaManager.loadSchema(resource)));
@@ -67,7 +67,7 @@ public class SchemaManager {
         }
 
         public SchemaManager build() {
-            return new SchemaManager(new TreeMap<>(data));
+            return new SchemaManager(data);
         }
     }
 
@@ -132,7 +132,7 @@ public class SchemaManager {
         @Override
         public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
             if (getContentHandler() == ch) {
-                final String version = Objects.toString(atts.getValue("version"), data.firstKey().getVersion());
+                final String version = Objects.toString(atts.getValue("version"), data.keySet().iterator().next().getVersion());
                 final Key schemaKey = new Key(version, uri);
                 Exceptions.raiseUnless(data.containsKey(schemaKey), ValidationException::new,
                     "Unknown validation schema %s", schemaKey);
@@ -176,24 +176,35 @@ public class SchemaManager {
     }
 
     private class SchemaRewriter extends XMLFilterImpl {
+
         private boolean root = true;
+        private Key rootSchemaKey = null;
 
         @Override
         public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
-            final Key schemaKey =
-                new Key(Objects.toString(atts.getValue("version"), data.firstKey().getVersion()), uri);
 
-            if (!target.equals(schemaKey) && data.containsKey(schemaKey)) {
+            // if no version attribute is available, we pick up the first known version (aka 1.1 most likely)
+            // not sure if that is either possible and correct
+            if (root) {
+                rootSchemaKey = new Key(
+                    Objects.toString(atts.getValue("version"), data.keySet().iterator().next().getVersion()),
+                    uri);
+            }
+
+            // no matter what we see now, if the namespace from the root element is different, we override the namespace
+            // the root version attribute gets also overridden for the root element only
+            if (!target.equals(rootSchemaKey)) {
                 uri = target.ns;
                 if (root) {
-                    atts = rewrite(atts);
+                    atts = rewriteVersion(atts);
                     root = false;
                 }
             }
+
             super.startElement(uri, localName, qName, atts);
         }
 
-        private Attributes rewrite(Attributes atts) {
+        private Attributes rewriteVersion(Attributes atts) {
             final AttributesImpl result;
             if (atts instanceof AttributesImpl) {
                 result = (AttributesImpl) atts;
@@ -229,7 +240,7 @@ public class SchemaManager {
     }
 
     static Schema loadSchema(String resource) {
-        final URL schemaUrl = Reflection.getClassLoader(XmlUtils.class).getResource(resource);
+        final URL schemaUrl = Reflection.loaderFromClassOrThread(SchemaManager.class).getResource(resource);
         try {
             return SCHEMA_FACTORY.newSchema(schemaUrl);
         } catch (SAXException e) {
@@ -244,13 +255,13 @@ public class SchemaManager {
     }
 
     private final Key target;
-    private final SortedMap<Key, Lazy<Schema>> data;
+    private final Map<Key, Lazy<Schema>> data;
     private final String description;
 
-    private SchemaManager(SortedMap<Key, Lazy<Schema>> data) {
+    private SchemaManager(Map<Key, Lazy<Schema>> data) {
         super();
-        this.data = Collections.unmodifiableSortedMap(data);
-        this.target = data.lastKey();
+        this.data = Collections.unmodifiableMap(data);
+        this.target = data.keySet().stream().skip(data.size() - 1).findFirst().orElseThrow(IllegalStateException::new);
         this.description = target.ns.substring(target.ns.lastIndexOf('/') + 1);
     }
 

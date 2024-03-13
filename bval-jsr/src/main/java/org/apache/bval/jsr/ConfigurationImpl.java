@@ -30,19 +30,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.validation.BootstrapConfiguration;
-import javax.validation.ClockProvider;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ParameterNameProvider;
-import javax.validation.TraversableResolver;
-import javax.validation.ValidationException;
-import javax.validation.ValidationProviderResolver;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.BootstrapState;
-import javax.validation.spi.ConfigurationState;
-import javax.validation.spi.ValidationProvider;
-import javax.validation.valueextraction.ValueExtractor;
+import jakarta.validation.BootstrapConfiguration;
+import jakarta.validation.ClockProvider;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.TraversableResolver;
+import jakarta.validation.ValidationException;
+import jakarta.validation.ValidationProviderResolver;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.BootstrapState;
+import jakarta.validation.spi.ConfigurationState;
+import jakarta.validation.spi.ValidationProvider;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
 import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
@@ -52,6 +52,7 @@ import org.apache.bval.jsr.xml.ValidationParser;
 import org.apache.bval.util.CloseableAble;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
@@ -156,6 +157,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private boolean ignoreXmlConfiguration = false;
 
     private ParticipantFactory participantFactory;
+    private ValidationParser validationParser;
 
     /**
      * Create a new ConfigurationImpl instance.
@@ -177,7 +179,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             this.provider = aProvider;
             this.providerResolver = null;
         }
-        initializePropertyDefaults();
     }
 
     /**
@@ -411,14 +412,17 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private BootstrapConfiguration createBootstrapConfiguration() {
         try {
             if (!ignoreXmlConfiguration) {
-                loader = ValidationParser.class.getClassLoader();
+                loader = Reflection.loaderFromThreadOrClass(ValidationParser.class);
+                validationParser = new ValidationParser(loader);
                 final BootstrapConfiguration xmlBootstrap =
-                    ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
+                    validationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
                 if (xmlBootstrap != null) {
                     return xmlBootstrap;
                 }
             }
-            loader = ApacheValidatorFactory.class.getClassLoader();
+            validationParser =
+                new ValidationParser(loader = Reflection.loaderFromThreadOrClass(ApacheValidatorFactory.class));
+
             return BootstrapConfigurationImpl.DEFAULT;
         } finally {
             participantFactory = new ParticipantFactory(loader);
@@ -432,7 +436,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             this.providerClass = loadClass(bootstrapConfig.getDefaultProviderClassName());
         }
         bootstrapConfig.getProperties().forEach(this::addProperty);
-        bootstrapConfig.getConstraintMappingResourcePaths().stream().map(ValidationParser::open)
+        bootstrapConfig.getConstraintMappingResourcePaths().stream().map(validationParser::open)
             .forEach(this::addMapping);
 
         if (!beforeCdi) {
@@ -459,10 +463,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         } catch (final ClassNotFoundException ex) {
             throw new ValidationException(ex);
         }
-    }
-
-    private void initializePropertyDefaults() {
-        properties.put(Properties.CONSTRAINTS_CACHE_SIZE, Integer.toString(50));
     }
 
     private ValidationProvider<?> findProvider() {

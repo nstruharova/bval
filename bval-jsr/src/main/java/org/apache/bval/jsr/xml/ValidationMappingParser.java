@@ -29,9 +29,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.validation.ValidationException;
-import javax.validation.spi.ConfigurationState;
+import jakarta.validation.ValidationException;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.ConfigurationState;
 
+import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder.ForBean;
 import org.apache.bval.jsr.metadata.MetadataSource;
@@ -39,6 +41,7 @@ import org.apache.bval.jsr.metadata.ValidatorMappingProvider;
 import org.apache.bval.jsr.metadata.XmlBuilder;
 import org.apache.bval.jsr.metadata.XmlValidationMappingProvider;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -55,12 +58,23 @@ public class ValidationMappingParser implements MetadataSource {
         .add(XmlBuilder.Version.v11.getId(), "http://jboss.org/xml/ns/javax/validation/mapping",
             "META-INF/validation-mapping-1.1.xsd")
         .add(XmlBuilder.Version.v20.getId(), "http://xmlns.jcp.org/xml/ns/validation/mapping",
-            "META-INF/validation-mapping-2.0.xsd")
+                "META-INF/validation-mapping-2.0.xsd")
+        .add(XmlBuilder.Version.v30.getId(), "https://jakarta.ee/xml/ns/validation/mapping",
+                "META-INF/validation-mapping-3.0.xsd")
         .build();
+
+    private ApacheValidatorFactory validatorFactory;
+
+    @Override
+    public void initialize(ApacheValidatorFactory validatorFactory) {
+        this.validatorFactory = Validate.notNull(validatorFactory);
+    }
 
     @Override
     public void process(ConfigurationState configurationState,
         Consumer<ValidatorMappingProvider> addValidatorMappingProvider, BiConsumer<Class<?>, ForBean<?>> addBuilder) {
+        Validate.validState(validatorFactory != null, "validatorFactory unknown");
+
         if (configurationState.isIgnoreXmlConfiguration()) {
             return;
         }
@@ -70,7 +84,8 @@ public class ValidationMappingParser implements MetadataSource {
 
             Optional.of(mapping).map(this::toMappingProvider).ifPresent(addValidatorMappingProvider);
 
-            final Map<Class<?>, MetadataBuilder.ForBean<?>> builders = new XmlBuilder(mapping).forBeans();
+            final Map<Class<?>, MetadataBuilder.ForBean<?>> builders =
+                new XmlBuilder(validatorFactory, mapping).forBeans();
             if (Collections.disjoint(beanTypes, builders.keySet())) {
                 builders.forEach(addBuilder::accept);
                 beanTypes.addAll(builders.keySet());
@@ -127,7 +142,12 @@ public class ValidationMappingParser implements MetadataSource {
     }
 
     private Class<?> loadClass(String className, String defaultPackage) {
-        return loadClass(toQualifiedClassName(className, defaultPackage));
+        final String fqn = toQualifiedClassName(className, defaultPackage);
+        try {
+            return Reflection.toClass(fqn, Reflection.loaderFromThreadOrClass(ValidationMappingParser.class));
+        } catch (ClassNotFoundException ex) {
+            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %s", fqn);
+        }
     }
 
     private String toQualifiedClassName(String className, String defaultPackage) {
@@ -143,17 +163,5 @@ public class ValidationMappingParser implements MetadataSource {
 
     private boolean isQualifiedClass(String clazz) {
         return clazz.indexOf('.') >= 0;
-    }
-
-    private Class<?> loadClass(final String className) {
-        ClassLoader loader = Reflection.getClassLoader(ValidationMappingParser.class);
-        if (loader == null) {
-            loader = getClass().getClassLoader();
-        }
-        try {
-            return Reflection.toClass(className, loader);
-        } catch (ClassNotFoundException ex) {
-            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %s", className);
-        }
     }
 }

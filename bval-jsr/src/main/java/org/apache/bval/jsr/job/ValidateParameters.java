@@ -29,10 +29,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ParameterNameProvider;
-import javax.validation.constraintvalidation.ValidationTarget;
-import javax.validation.metadata.ExecutableDescriptor;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.constraintvalidation.ValidationTarget;
+import jakarta.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
@@ -167,7 +167,7 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         super(validatorContext, groups, meta);
         this.object = object;
         this.parameterValues =
-            Validate.notNull(parameterValues, IllegalArgumentException::new, "null parameter values").clone();
+            Validate.notNull(parameterValues, IllegalArgumentException::new, "null parameter values");
 
         final Type[] genericParameterTypes = executable.getGenericParameterTypes();
         Exceptions.raiseUnless(parameterValues.length == genericParameterTypes.length, IllegalArgumentException::new,
@@ -185,7 +185,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
     @Override
     protected boolean hasWork() {
-        return describe() != null;
+        final ExecutableDescriptor descriptor = describe();
+        return descriptor != null && descriptor.hasConstrainedParameters();
     }
 
     protected abstract ExecutableDescriptor describe();

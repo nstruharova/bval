@@ -19,13 +19,21 @@ package org.apache.bval.jsr.metadata;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.spi.ConfigurationState;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.spi.ConfigurationState;
+
+import org.apache.bval.jsr.ApacheValidatorFactory;
 
 /**
  * Service interface for user metadata customizations.
  */
 public interface MetadataSource {
+    /**
+     * Initialize the {@link MetadataSource}.
+     * @param validatorFactory
+     */
+    default void initialize(ApacheValidatorFactory validatorFactory) {
+    }
 
     /**
      * Add {@link ConstraintValidator} mappings and/or metadata builders.

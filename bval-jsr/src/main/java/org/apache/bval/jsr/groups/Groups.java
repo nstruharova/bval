@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import javax.validation.GroupDefinitionException;
+import jakarta.validation.GroupDefinitionException;
 
 import org.apache.bval.util.Exceptions;
 
@@ -81,11 +81,11 @@ public class Groups {
 
     /**
      * Assert that the default group can be expanded to <code>defaultGroups</code>.
+     * Package-private method intended for unit tests.
      * 
      * @param defaultGroups
      */
-    @Deprecated
-    public void assertDefaultGroupSequenceIsExpandable(List<Group> defaultGroups) {
+    void assertDefaultGroupSequenceIsExpandable(List<Group> defaultGroups) {
         Consumer<List<Group>> action = (groupList) -> {
             final int idx = groupList.indexOf(Group.DEFAULT);
             if (idx >= 0) {

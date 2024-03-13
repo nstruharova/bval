@@ -21,10 +21,10 @@ package org.apache.bval.jsr.descriptor;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Set;
 
-import javax.validation.metadata.CascadableDescriptor;
-import javax.validation.metadata.ContainerDescriptor;
-import javax.validation.metadata.ContainerElementTypeDescriptor;
-import javax.validation.metadata.GroupConversionDescriptor;
+import jakarta.validation.metadata.CascadableDescriptor;
+import jakarta.validation.metadata.ContainerDescriptor;
+import jakarta.validation.metadata.ContainerElementTypeDescriptor;
+import jakarta.validation.metadata.GroupConversionDescriptor;
 
 import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.ToUnmodifiable;
@@ -35,13 +35,16 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
 
     private final boolean cascaded;
     private final Set<GroupConversion> groupConversions;
-    private final Set<ContainerElementTypeD> containerElementTypes;
+    private final Set<ContainerElementTypeDescriptor> containerElementTypes;
 
     protected CascadableContainerD(MetadataReader.ForContainer<E> reader, P parent) {
         super(reader, parent);
         cascaded = reader.isCascaded();
         groupConversions = reader.getGroupConversions();
-        containerElementTypes = reader.getContainerElementTypes(this);
+        containerElementTypes = reader.getContainerElementTypes(this)
+                                      .stream()
+                                      .filter(DescriptorManager::isConstrained)
+                                      .collect(ToUnmodifiable.set());
     }
 
     @Override
@@ -62,7 +65,6 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
 
     @Override
     public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
-        return containerElementTypes.stream().filter(DescriptorManager::isConstrained)
-            .collect(ToUnmodifiable.set());
+        return containerElementTypes;
     }
 }

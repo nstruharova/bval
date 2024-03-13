@@ -18,15 +18,20 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.ClockProvider;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ParameterNameProvider;
-import javax.validation.TraversableResolver;
-import javax.validation.Validator;
-import javax.validation.ValidatorContext;
-import javax.validation.valueextraction.ValueExtractor;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
+import jakarta.validation.ClockProvider;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.TraversableResolver;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorContext;
+import jakarta.validation.valueextraction.ValueExtractor;
+
+import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
@@ -180,5 +185,23 @@ public class ApacheFactoryContext implements ValidatorContext {
 
     public ConstraintCached getConstraintsCache() {
         return factory.getConstraintsCache();
+    }
+
+    public ApacheValidatorFactory getFactory() {
+        return factory;
+    }
+
+    public ConstraintValidator getOrComputeConstraintValidator(final ConstraintD<?> constraint, final Supplier<ConstraintValidator> computer) {
+        final ConcurrentMap<ConstraintD<?>, ConstraintValidator<?, ?>> constraintsCache = factory.getConstraintsCache().getValidators();
+        final ConstraintValidator<?, ?> validator = constraintsCache.get(constraint); // constraints are cached so we can query per instance
+        if (validator != null) {
+            return validator;
+        }
+        ConstraintValidator<?, ?> instance = computer.get();
+        final ConstraintValidator<?, ?> existing = constraintsCache.putIfAbsent(constraint, instance);
+        if (existing != null) {
+            instance = existing;
+        }
+        return instance;
     }
 }

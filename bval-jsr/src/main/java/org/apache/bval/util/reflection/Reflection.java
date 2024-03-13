@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.apache.bval.util.Validate;
 import org.apache.commons.weaver.privilizer.Privilizing;
 
 /**
@@ -208,29 +209,37 @@ public class Reflection {
             // do nothing
             return null;
         }
-        final boolean mustUnset = setAccessible(valueMethod, true);
-        try {
-            return valueMethod.invoke(annotation);
-        } finally {
-            if (mustUnset) {
-                setAccessible(valueMethod, false);
-            }
-        }
+        makeAccessible(valueMethod);
+        return valueMethod.invoke(annotation);
     }
 
     /**
-     * Get a usable {@link ClassLoader}: that of {@code clazz} if {@link Thread#getContextClassLoader()} returns {@code null}.
+     * Get a {@link ClassLoader} preferring that of {@code clazz} over
+     * {@link Thread#getContextClassLoader()} of current {@link Thread}.
+     * 
      * @param clazz
      * @return {@link ClassLoader}
      */
-    public static ClassLoader getClassLoader(final Class<?> clazz) {
-        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        return cl == null ? clazz.getClassLoader() : cl;
+    public static ClassLoader loaderFromClassOrThread(final Class<?> clazz) {
+        return Optional.of(clazz).map(Class::getClassLoader)
+            .orElseGet(() -> Thread.currentThread().getContextClassLoader());
+    }
+
+    /**
+     * Get a {@link ClassLoader} preferring
+     * {@link Thread#getContextClassLoader()} of current {@link Thread} over
+     * that of {@code fallbackClass}.
+     * 
+     * @param fallbackClass
+     * @return {@link ClassLoader}
+     */
+    public static ClassLoader loaderFromThreadOrClass(final Class<?> fallbackClass) {
+        return Optional.of(Thread.currentThread()).map(Thread::getContextClassLoader)
+            .orElseGet(() -> Validate.notNull(fallbackClass).getClassLoader());
     }
 
     public static Class<?> toClass(String className) throws ClassNotFoundException {
-        ClassLoader cl = getClassLoader(Reflection.class);
-        return toClass(className, cl);
+        return toClass(className, loaderFromThreadOrClass(Reflection.class));
     }
 
     /**
@@ -251,10 +260,9 @@ public class Reflection {
      *
      * @throws RuntimeException on load error
      */
-    public static Class<?> toClass(String className, boolean resolve, ClassLoader loader) throws ClassNotFoundException {
-        if (className == null) {
-            throw new NullPointerException("className == null");
-        }
+    public static Class<?> toClass(String className, boolean resolve, ClassLoader loader)
+        throws ClassNotFoundException {
+        Validate.notNull(className, "className was null");
 
         // array handling
         int dims = 0;
@@ -276,7 +284,6 @@ public class Reflection {
                 }
             }
         }
-
         if (dims > 0) {
             StringBuilder buf = new StringBuilder(className.length() + dims + 2);
             for (int i = 0; i < dims; i++) {
@@ -291,7 +298,6 @@ public class Reflection {
             }
             className = buf.toString();
         }
-
         if (loader == null) {
             loader = Thread.currentThread().getContextClassLoader();
         }
@@ -417,33 +423,25 @@ public class Reflection {
         try {
             return cls.getConstructor().newInstance();
         } catch (final Exception ex) {
-            throw new RuntimeException("Cannot instantiate : " + cls, ex);
+            throw new IllegalArgumentException("Cannot instantiate : " + cls, ex);
         }
     }
 
     /**
-     * Set the accessibility of {@code o} to {@code accessible}. If running without a {@link SecurityManager}
-     * and {@code accessible == false}, this call is ignored (because any code could reflectively make any
-     * object accessible at any time).
+     * Set the accessibility of {@code o} to true.
      * @param o
-     * @param accessible
-     * @return whether a change was made.
      */
-    public static boolean setAccessible(final AccessibleObject o, boolean accessible) {
-        if (o == null || o.isAccessible() == accessible) {
-            return false;
-        }
-        if (!accessible && System.getSecurityManager() == null) {
-            return false;
+    public static void makeAccessible(final AccessibleObject o) {
+        if (o == null || o.isAccessible()) {
+        	return;
         }
         final Member m = (Member) o;
 
         // For public members whose declaring classes are public, we need do nothing:
         if (Modifier.isPublic(m.getModifiers()) && Modifier.isPublic(m.getDeclaringClass().getModifiers())) {
-            return false;
+            return;
         }
-        o.setAccessible(accessible);
-        return true;
+        o.setAccessible(true);
     }
 
     /**

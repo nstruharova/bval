@@ -31,11 +31,12 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import jakarta.validation.BootstrapConfiguration;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 import org.apache.bval.jsr.ApacheValidationProvider;
 import org.apache.bval.jsr.ApacheValidatorConfiguration;
@@ -43,29 +44,33 @@ import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.example.XmlEntitySampleBean;
 import org.apache.bval.jsr.resolver.SimpleTraversableResolver;
 import org.apache.bval.util.reflection.Reflection;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 /**
  * ValidationParser Tester.
- *
- * @author <Authors name>
- * @version 1.0
- * @since <pre>11/25/2009</pre>
  */
 public class ValidationParserTest implements ApacheValidatorConfiguration.Properties {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    private ValidationParser validationParser;
+
+    @Before
+    public void setup() {
+        validationParser = new ValidationParser(Reflection.loaderFromThreadOrClass(ValidationParserTest.class));
+    }
+
     @Test
     public void testGetInputStream() throws IOException {
-        assertNotNull(ValidationParser.getInputStream("sample-validation.xml"));
+        assertNotNull(validationParser.getInputStream("sample-validation.xml"));
 
         // make sure there are duplicate resources on the classpath before the next checks:
         final Enumeration<URL> resources =
-            Reflection.getClassLoader(ValidationParser.class).getResources("META-INF/MANIFEST.MF");
+            Reflection.loaderFromClassOrThread(ValidationParser.class).getResources("META-INF/MANIFEST.MF");
 
         assumeTrue(resources.hasMoreElements());
         resources.nextElement();
@@ -76,25 +81,40 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
     public void testGetNonUniqueInputStream() throws IOException {
         thrown.expect(ValidationException.class);
         thrown.expectMessage("More than ");
-        ValidationParser.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully
+        validationParser.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully
     }
 
     @Test
     public void testParse() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        ValidationParser.processValidationConfig("sample-validation.xml", config);
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
     }
 
     @Test
     public void testParseV11() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        ValidationParser.processValidationConfig("sample-validation11.xml", config);
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation11.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
+
     }
 
     @Test
     public void testParseV20() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        ValidationParser.processValidationConfig("sample-validation2.xml", config);
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation2.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
+    }
+
+    @Test
+    public void testParseV30() {
+        ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation3.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
     }
 
     @Test

@@ -23,6 +23,9 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.annotation.Documented;
@@ -30,16 +33,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Set;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
-import javax.validation.metadata.PropertyDescriptor;
-import javax.validation.metadata.Scope;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.ElementDescriptor.ConstraintFinder;
+import jakarta.validation.metadata.PropertyDescriptor;
+import jakarta.validation.metadata.Scope;
 
 import org.apache.bval.jsr.util.TestUtils;
 import org.junit.Test;
@@ -147,7 +150,7 @@ public class BeanDescriptorTest extends ValidationTestBase {
 
     /**
      * Check the correct behavior of
-     * {@link ConstraintFinder#lookingAt(javax.validation.metadata.Scope)}.
+     * {@link ConstraintFinder#lookingAt(jakarta.validation.metadata.Scope)}.
      */
     @Test
     public void testConstraintFinderLookingAt() {
@@ -163,6 +166,19 @@ public class BeanDescriptorTest extends ValidationTestBase {
         //verify that changes to one ConstraintFinder don't affect the base:
         constraints = nameDescriptor.getConstraintDescriptors();
         assertEquals("Incorrect number of descriptors", 1, constraints.size());
+    }
+
+    @Test
+    public void testDescriptorCaching() {
+        // constrained
+        final BeanDescriptor personDescriptor = validator.getConstraintsForClass(Person.class);
+        assertNotNull(personDescriptor);
+        assertSame(personDescriptor, validator.getConstraintsForClass(Person.class));
+
+        // unconstrained
+        final BeanDescriptor objectDescriptor = validator.getConstraintsForClass(Object.class);
+        assertNotNull(objectDescriptor);
+        assertSame(objectDescriptor, validator.getConstraintsForClass(Object.class));
     }
 
     public static class Form {

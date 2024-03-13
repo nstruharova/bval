@@ -1,3 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<!--
+    Maven release plugin requires the project tag to be on a single line.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
@@ -5,22 +27,25 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>18</version>
+        <version>31</version>
         <relativePath />
     </parent>
 
     <groupId>org.apache.bval</groupId>
     <artifactId>bval-parent</artifactId>
-    <name>Apache BVal :: bval-parent (Parent POM)</name>
+    <name>Apache BVal</name>
     <packaging>pom</packaging>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.1-SNAPSHOT</version>
 
     <description>Apache BVal parent pom</description>
 
     <properties>
-        <site.deploy.url>sftp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
-        <commons.weaver.version>1.4-SNAPSHOT</commons.weaver.version>
-        <privilizer.policy>DYNAMIC</privilizer.policy>
+        <commons.weaver.version>2.0</commons.weaver.version>
+        <site.checkout>${user.home}/apache-bval-site</site.checkout>
+        <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
+        <site.server>bval.site</site.server>
+        <built.by>${user.name}</built.by>
+        <plugin.javadoc.version>3.6.3</plugin.javadoc.version>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -28,9 +53,10 @@
     <url>http://bval.apache.org/</url>
 
     <scm>
-        <connection>scm:git:http://git-wip-us.apache.org/repos/asf/bval</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/bval</developerConnection>
-        <url>http://git-wip-us.apache.org/repos/asf/bval</url>
+        <connection>scm:git:http://gitbox.apache.org/repos/asf/bval</connection>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/bval</developerConnection>
+        <url>http://gitbox.apache.org/repos/asf/bval</url>
+        <tag>HEAD</tag>
     </scm>
 
     <mailingLists>
@@ -74,7 +100,7 @@
         </developer>
         <developer>
             <id>carlosvara</id>
-            <name>Carlos Vara</name>
+            <name>Carlos Vara Callau</name>
             <email>carlosvara@apache.org</email>
             <roles>
                 <role>PMC Member</role>
@@ -122,7 +148,7 @@
             <email>kevan@apache.org</email>
             <organization>IBM</organization>
             <roles>
-                <role>PMC Member</role>
+                <role>PMC Member (Emeritus)</role>
             </roles>
         </developer>
         <developer>
@@ -193,6 +219,14 @@
                 <role>PMC Member</role>
             </roles>
         </developer>
+        <developer>
+            <id>tandraschko</id>
+            <name>Thomas Andraschko</name>
+            <email>tandraschko@apache.org</email>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
     </developers>
 
     <contributors>
@@ -209,10 +243,7 @@
         <name>Jarek Gawor</name>
       </contributor>
       <contributor>
-        <name>J&#246;rg Wa&#223;mer</name>
-      </contributor>
-      <contributor>
-        <name>Romain Manni-Bucau</name>
+        <name>Jörg Waßmer</name>
       </contributor>
       <contributor>
         <name>Sebastian Bazley</name>
@@ -221,8 +252,9 @@
 
     <distributionManagement>
         <site>
-            <id>people.apache.org</id>
-            <url>${site.deploy.url}</url>
+            <id>bval.site</id>
+            <name>Apache BVal Site SVN</name>
+            <url>scm:svn:${site.url}</url>
         </site>
     </distributionManagement>
 
@@ -231,14 +263,14 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.8</version>
+                <version>${plugin.javadoc.version}</version>
                 <configuration>
+                    <doclint>none</doclint>
                     <show>package</show>
                     <quiet>true</quiet>
-                    <source>1.8</source>
+                    <release>11</release>
                     <links>
-                        <link>http://docs.oracle.com/javase/8/docs/api</link>
-
+                        <link>http://docs.oracle.com/javase/11/docs/api</link>
                     </links>
                 </configuration>
                 <reportSets>
@@ -251,58 +283,77 @@
                 </reportSets>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${plugin.javadoc.version}</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <doclint>none</doclint>
+                    <show>package</show>
+                    <quiet>true</quiet>
+                    <release>11</release>
+                    <links>
+                        <link>http://docs.oracle.com/javase/11/docs/api</link>
+                    </links>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>aggregate</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jdepend-maven-plugin</artifactId>
-                <version>2.0-beta-2</version>
+                <version>2.0</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.0.5</version>
             </plugin>
         </plugins>
     </reporting>
 
-    
+    <!--
+        default versions for dependencies that child modules may include
+    -->
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.apache.geronimo.specs</groupId>
-                <artifactId>geronimo-validation_2.0_spec</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>3.0.2</version>
             </dependency>
-            
+            <!-- Optional profile to use Spec RI API -->
             <dependency>
-                <groupId>javax.validation</groupId>
+                <groupId>jakarta.validation</groupId>
                 <artifactId>validation-api</artifactId>
                 <version>2.0.1.Final</version>
             </dependency>
-            
+            <!-- JPA2 spec required for JPA TraversableResolver support -->
             <dependency>
-                <groupId>org.apache.geronimo.specs</groupId>
-                <artifactId>geronimo-jpa_2.0_spec</artifactId>
-                <version>1.1</version>
+                <groupId>jakarta.persistence</groupId>
+                <artifactId>jakarta.persistence-api</artifactId>
+                <version>3.1.0</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13.2</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>1.10.19</version>
+                <version>5.11.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.7</version>
+                <version>3.14.0</version>
                 <optional>true</optional>
-            </dependency>
-            <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils-core</artifactId>
-                <version>1.8.3</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -313,42 +364,19 @@
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
                 <artifactId>xstream</artifactId>
-                <version>1.4.9</version>
+                <version>1.4.20</version>
             </dependency>
-            
+            <!-- Optional - only used by bval-json -->
             <dependency>
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
-                <version>2.3.23</version>
-            </dependency>
-            
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.inject</groupId>
-                <artifactId>guice</artifactId>
-                <version>3.0-rc2</version>
-            </dependency>
-            <dependency>
-                <groupId>aopalliance</groupId>
-                <artifactId>aopalliance</artifactId>
-                <version>1.0</version>
+                <version>2.3.32</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-el-api</artifactId>
-                <version>9.0.5</version>
+                <version>10.1.19</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-	            <groupId>com.oracle</groupId>
-	            <artifactId>javafx</artifactId>
-	            <version>8.0</version>
-	            <systemPath>${java.home}/lib/ext/jfxrt.jar</systemPath>
-	            <scope>system</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -374,10 +402,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
+                        <release>11</release>
                         <encoding>${project.build.sourceEncoding}</encoding>
-                    <useIncrementalCompilation>false</useIncrementalCompilation><includes><include>ain/java/org/apache/bval/constraints/MinValidatorForString.java</include><include>est/java/org/apache/bval/jsr/Jsr303Test.java</include><include>est/java/org/apache/bval/jsr/ConstraintCompositionTest.java</include><include>ain/java/org/apache/bval/jsr/job/ValidateExecutable.java</include><include>ain/java/org/apache/bval/jsr/valueextraction/ValueExtractors.java</include><include>est/java/org/apache/bval/jsr/TckReproducerTest.java</include><include>ain/java/org/apache/bval/constraints/NumberSignValidator.java</include><include>ain/java/org/apache/bval/jsr/metadata/CompositeBuilder.java</include><include>ain/java/org/apache/bval/jsr/util/NodeContextBuilderImpl.java</include><include>ain/java/org/apache/bval/jsr/xml/SchemaManager.java</include><include>ain/java/org/apache/bval/jsr/DefaultConstraintValidatorFactory.java</include><include>c/main/java/org/apache/bval/extras/constraints/file/DirectoryValidator.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/ModulusValidator.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/LuhnCheckDigitTest.java</include><include>ain/java/org/apache/bval/constraints/TimeValidator.java</include><include>ain/java/org/apache/bval/jsr/GraphContext.java</include><include>ain/java/org/apache/bval/jsr/metadata/MetadataBuilders.java</include><include>est/java/org/apache/bval/jsr/ExceptionsContractTest.java</include><include>ain/java/org/apache/bval/jsr/metadata/ContainerElementKey.java</include><include>c/main/java/org/apache/bval/extras/constraints/file/SymlinkValidator.java</include><include>est/java/org/apache/bval/jsr/ContextConstraintValidatorFactoryTest.java</include><include>est/java/org/apache/bval/jsr/groups/inheritance/BuyInOneClick.java</include><include>est/java/org/apache/bval/jsr/extensions/ExampleMethodService.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/ISBN10CheckDigitTest.java</include><include>ain/java/org/apache/bval/jsr/util/Proxies.java</include><include>ain/java/org/apache/bval/constraints/NotEmpty.java</include><include>c/main/java/org/apache/bval/extras/constraints/creditcard/Mastercard.java</include><include>est/java/org/apache/bval/jsr/groups/CyclicGroupSequence1.java</include><include>ain/java/org/apache/bval/jsr/metadata/ValidatorMapping.java</include><include>ain/java/org/apache/bval/jsr/util/AnnotationProxyBuilder.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/Luhn.java</include><include>ain/java/org/apache/bval/jsr/valueextraction/OptionalExtractor.java</include><include>ain/java/org/apache/bval/cdi/BValAnnotatedType.java</include><include>c/main/java/org/apache/bval/extras/constraints/net/InetAddressValidator.java</include><include>est/java/org/apache/bval/jsr/example/Book.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/Verhoeff.java</include><include>est/java/org/apache/bval/jsr/groups/implicit/Auditable.java</include><include>c/test/java/org/apache/bval/extras/constraints/net/DomainValidatorTest.java</include><include>est/java/org/apache/bval/jsr/CustomConstraintValidatorFactoryTest.java</include><include>ain/java/org/apache/bval/jsr/ApacheValidatorFactory.java</include><include>ain/java/org/apache/bval/jsr/descriptor/PropertyD.java</include><include>ain/java/org/apache/bval/jsr/xml/ValidationParser.java</include><include>est/java/org/apache/bval/jsr/example/NoValidatorTestEntity.java</include><include>ain/java/org/apache/bval/jsr/valueextraction/IterableElementExtractor.java</include><include>ain/java/org/apache/bval/jsr/metadata/DualValidationMappingProvider.java</include><include>ain/java/org/apache/bval/jsr/job/ComputeConstraintValidatorClass.java</include><include>ain/java/org/apache/bval/jsr/groups/Groups.java</include><include>est/java/org/apache/bval/jsr/groups/GClass3.java</include><include>ain/java/org/apache/bval/constraints/Email.java</include><include>ain/java/org/apache/bval/constraints/FutureValidator.java</include><include>ain/java/org/apache/bval/constraints/NotEmptyValidatorForCollection.java</include><include>ain/java/org/apache/bval/constraints/PatternValidator.java</include><include>ain/java/org/apache/bval/jsr/xml/ValidationMappingParser.java</include><include>ain/java/org/apache/bval/jsr/descriptor/CascadableContainerD.java</include><include>ain/java/org/apache/bval/jsr/valueextraction/FxExtractor.java</include><include>ain/java/org/apache/bval/jsr/valueextraction/ListElementExtractor.java</include><include>c/main/java/org/apache/bval/extras/constraints/net/InetAddress.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/EAN13CheckDigitTest.java</include><include>est/java/org/apache/bval/jsr/groups/DefaultGroupSequenceTest.java</include><include>ain/java/org/apache/bval/jsr/metadata/Signature.java</include><include>ain/java/org/apache/bval/jsr/DefaultMessageInterpolator.java</include><include>est/java/org/apache/bval/constraints/FrenchZipcodeValidator.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/CUSIP.java</include><include>ain/java/org/apache/bval/jsr/ConstraintAnnotationAttributes.java</include><include>ain/java/org/apache/bval/jsr/util/PathNavigation.java</include><include>ain/java/org/apache/bval/constraints/DecimalMaxValidator.java</include><include>ain/java/org/apache/bval/constraints/NotEmptyValidatorForCharSequence.java</include><include>est/java/org/apache/bval/constraints/AuthorAddressKnown.java</include><include>ain/java/org/apache/bval/cdi/BValBinding.java</include><include>ain/java/org/apache/bval/constraints/FutureOrPresentValidator.java</include><include>ain/java/org/apache/bval/jsr/descriptor/MetadataReader.java</include><include>ain/java/org/apache/bval/cdi/ValidatorBean.java</include><include>ain/java/org/apache/bval/jsr/xml/MappingValidator.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/IBANValidator.java</include><include>est/java/org/apache/bval/jsr/groups/GClass2.java</include><include>ain/java/org/apache/bval/constraints/DigitsValidatorForNumber.java</include><include>ain/java/org/apache/bval/constraints/AbstractPatternValidator.java</include><include>ain/java/org/apache/bval/jsr/descriptor/DescriptorManager.java</include><include>ain/java/org/apache/bval/arquillian/jndi/BValJndiFactory.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ReturnValueD.java</include><include>est/java/org/apache/bval/jsr/groups/redefining/InvalidRedefinedDefaultGroupAddress.java</include><include>ain/java/org/apache/bval/jsr/util/NodeImpl.java</include><include>ain/java/org/apache/bval/jsr/metadata/Meta.java</include><include>est/java/org/apache/bval/constraints/CompanyEmail.java</include><include>ain/java/org/apache/bval/jsr/job/ConstraintValidatorContextImpl.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ExecutableD.java</include><include>ain/java/org/apache/bval/constraints/SizeValidator.java</include><include>est/java/org/apache/bval/constraints/Password.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/ISBN10.java</include><include>ain/java/org/apache/bval/jsr/metadata/XmlValidationMappingProvider.java</include><include>ain/java/org/apache/bval/jsr/descriptor/MethodD.java</include><include>est/java/org/apache/bval/jsr/example/Continent.java</include><include>ain/java/org/apache/bval/constraints/PastValidator.java</include><include>est/java/org/apache/bval/jsr/example/SizeTestEntity.java</include><include>ain/java/org/apache/bval/util/reflection/Reflection.java</include><include>ain/java/org/apache/bval/jsr/metadata/CompositeValidatorMappingProvider.java</include><include>est/java/org/apache/bval/jsr/groups/implicit/ImplicitGroupingTest.java</include><include>ain/java/org/apache/bval/jsr/resolver/DefaultTraversableResolver.java</include><include>ain/java/org/apache/bval/util/EmulatedAnnotatedType.java</include><include>est/java/org/apache/bval/jsr/groups/CyclicGroupSequence.java</include><include>est/java/org/apache/bval/jsr/util/PathImplTest.java</include><include>est/java/org/apache/bval/jsr/ValidationTestBase.java</include><include>est/java/org/apache/bval/jsr/example/BusinessAddress.java</include><include>est/java/org/apache/bval/jsr/example/AccessTestBusinessObject.java</include><include>est/java/org/apache/bval/jsr/example/Author.java</include><include>ain/java/org/apache/bval/arquillian/EJBEnricher.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/CUSIPValidatorTest.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/AbstractCheckDigitTest.java</include><include>est/java/org/apache/bval/jsr/CustomValidatorFactoryTest.java</include><include>ain/java/org/apache/bval/el/ELFacade.java</include><include>ain/java/org/apache/bval/constraints/DecimalMinValidator.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/VerhoeffValidator.java</include><include>c/main/java/org/apache/bval/extras/constraints/net/DomainValidator.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/IBANCheckDigitTest.java</include><include>ain/java/org/apache/bval/jsr/util/ContainerElementNodeContextBuilderImpl.java</include><include>est/java/org/apache/bval/jsr/BootstrapTest.java</include><include>ain/java/org/apache/bval/cdi/BValInterceptorBean.java</include><include>est/java/org/apache/bval/jsr/ComposedConstraintsTest.java</include><include>est/java/org/apache/bval/jsr/ConstraintDefinitionsTest.java</include><include>est/java/org/apache/bval/jsr/util/TestUtils.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ComposedD.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/ABANumberValidatorTest.java</include><include>est/java/org/apache/bval/jsr/groups/GroupValidationTest.java</include><include>est/java/org/apache/bval/jsr/groups/inheritance/GroupInheritanceTest.java</include><include>ain/java/org/apache/bval/jsr/job/ValidationJob.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/IBAN.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ParameterD.java</include><include>est/java/org/apache/bval/jsr/groups/redefining/RedefiningDefaultGroupTest.java</include><include>ain/java/org/apache/bval/jsr/util/ExecutableTypes.java</include><include>ain/java/org/apache/bval/constraints/NotEmptyValidatorForMap.java</include><include>ain/java/org/apache/bval/jsr/descriptor/BeanD.java</include><include>c/main/java/org/apache/bval/extras/constraints/file/NotDirectory.java</include><include>est/java/org/apache/bval/jsr/example/Library.java</include><include>est/java/org/apache/bval/jsr/groups/GroupSequenceTest.java</include><include>est/java/org/apache/bval/jsr/FooTest.java</include><include>est/java/org/apache/bval/jsr/extensions/MethodValidatorImplTest.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/EAN13.java</include><include>ain/java/org/apache/bval/jsr/ApacheValidationProvider.java</include><include>est/java/org/apache/bval/constraints/FrenchZipCode.java</include><include>est/java/org/apache/bval/jsr/groups/CyclicGroupSequence2.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/VerhoeffCheckDigitTest.java</include><include>ain/java/org/apache/bval/cdi/ValidatorFactoryBean.java</include><include>est/java/org/apache/bval/jsr/groups/redefining/Address.java</include><include>ain/java/org/apache/bval/jsr/metadata/ValidatorMappingProvider.java</include><include>ain/java/org/apache/bval/jsr/ValidatorImpl.java</include><include>est/java/org/apache/bval/jsr/DefaultMessageInterpolatorTest.java</include><include>ain/java/org/apache/bval/jsr/resolver/CachingRelevant.java</include><include>est/java/org/apache/bval/jsr/example/AccessTestBusinessObjectSub.java</include><include>c/main/java/org/apache/bval/extras/constraints/net/Domain.java</include><include>ain/java/org/apache/bval/constraints/NotEmptyValidator.java</include><include>ain/java/org/apache/bval/jsr/BootstrapConfigurationImpl.java</include><include>ain/java/org/apache/bval/jsr/metadata/Liskov.java</include><include>est/java/org/apache/bval/jsr/BeanDescriptorTest.java</include><include>ain/java/org/apache/bval/jsr/groups/GroupsComputer.java</include><include>c/main/java/org/apache/bval/extras/constraints/creditcard/Diners.java</include><include>ain/java/org/apache/bval/arquillian/BValArquillianExtension.java</include><include>ain/java/org/apache/bval/jsr/metadata/ReflectionBuilder.java</include><include>est/java/org/apache/bval/constraints/ZipCodeCityCoherenceValidator.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ConstructorD.java</include><include>ain/java/org/apache/bval/jsr/util/NodeBuilderCustomizableContextImpl.java</include><include>ain/java/org/apache/bval/jsr/CascadingPropertyValidator.java</include><include>est/java/org/apache/bval/jsr/example/IllustratedBook.java</include><include>c/main/java/org/apache/bval/extras/constraints/creditcard/Discover.java</include><include>ain/java/org/apache/bval/util/Exceptions.java</include><include>c/main/java/org/apache/bval/extras/constraints/file/Directory.java</include><include>est/java/org/apache/bval/jsr/groups/GroupSequenceIsolationTest.java</include><include>est/java/org/apache/bval/jsr/xml/ValidationParserTest.java</include><include>ain/java/org/apache/bval/jsr/ConstraintViolationImpl.java</include><include>ain/java/org/apache/bval/jsr/groups/GroupConversion.java</include><include>ain/java/org/apache/bval/jsr/parameter/DefaultParameterNameProvider.java</include><include>ain/java/org/apache/bval/jsr/util/NodeBuilderDefinedContextImpl.java</include><include>ain/java/org/apache/bval/cdi/EmptyAnnotationLiteral.java</include><include>est/java/org/apache/bval/constraints/DecimalMinMaxValidatorsTest.java</include><include>ain/java/org/apache/bval/jsr/groups/Group.java</include><include>c/main/java/org/apache/bval/extras/constraints/file/NotDirectoryValidator.java</include><include>ain/java/org/apache/bval/jsr/job/ValidateReturnValue.java</include><include>ain/java/org/apache/bval/jsr/resolver/CachingTraversableResolver.java</include><include>ain/java/org/apache/bval/jsr/resolver/SimpleTraversableResolver.java</include><include>est/java/org/apache/bval/jsr/groups/GroupsComputerTest.java</include><include>ain/java/org/apache/bval/constraints/AssertFalseValidator.java</include><include>est/java/org/apache/bval/jsr/example/PreferredGuest.java</include><include>c/main/java/org/apache/bval/extras/constraints/file/Symlink.java</include><include>ain/java/org/apache/bval/jsr/groups/GroupStrategy.java</include><include>ain/java/org/apache/bval/jsr/job/ValidateParameters.java</include><include>est/java/org/apache/bval/constraints/HasStringValidator.java</include><include>est/java/org/apache/bval/jsr/ValidationTest.java</include><include>ain/java/org/apache/bval/jsr/xml/AnnotationProxy.java</include><include>est/java/org/apache/bval/jsr/example/MaxTestEntity.java</include><include>ain/java/org/apache/bval/cdi/BValInterceptor.java</include><include>ain/java/org/apache/bval/jsr/metadata/HierarchyBuilder.java</include><include>ain/java/org/apache/bval/cdi/DefaultLiteral.java</include><include>est/java/org/apache/bval/jsr/PayloadTest.java</include><include>ain/java/org/apache/bval/constraints/NotBlankValidator.java</include><include>ain/java/org/apache/bval/jsr/util/ContainerElementNodeBuilderDefinedContextImpl.java</include><include>est/java/org/apache/bval/constraints/MinMaxValidatorsForNumberTest.java</include><include>ain/java/org/apache/bval/jsr/metadata/ClassLoadingValidatorMappingProvider.java</include><include>est/java/org/apache/bval/constraints/EmailValidatorTest.java</include><include>ain/java/org/apache/bval/jsr/xml/XmlUtils.java</include><include>c/main/java/org/apache/bval/extras/constraints/creditcard/Visa.java</include><include>ain/java/org/apache/bval/jsr/util/LeafNodeBuilderCustomizableContextImpl.java</include><include>est/java/org/apache/bval/constraints/ZipCodeCityCoherence.java</include><include>est/java/org/apache/bval/jsr/CircularReferencesTest.java</include><include>est/java/org/apache/bval/jsr/example/RecursiveFoo.java</include><include>ain/java/org/apache/bval/jsr/valueextraction/ExtractValues.java</include><include>est/java/org/apache/bval/jsr/ValidatorResolutionTest.java</include><include>ain/java/org/apache/bval/cdi/AnyLiteral.java</include><include>c/main/java/org/apache/bval/extras/constraints/creditcard/AmericanExpress.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ContainerElementTypeD.java</include><include>ain/java/org/apache/bval/jsr/resolver/JPATraversableResolver.java</include><include>ain/java/org/apache/bval/constraints/MinValidatorForNumber.java</include><include>ain/java/org/apache/bval/constraints/MaxValidatorForNumber.java</include><include>ain/java/org/apache/bval/constraints/PastOrPresentValidator.java</include><include>ain/java/org/apache/bval/jsr/job/ValidationJobFactory.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/ABANumber.java</include><include>ain/java/org/apache/bval/jsr/metadata/AnnotationDeclaredValidatorMappingProvider.java</include><include>ain/java/org/apache/bval/jsr/xml/AnnotationProxyBuilder.java</include><include>est/java/org/apache/bval/jsr/groups/implicit/Order.java</include><include>ain/java/org/apache/bval/jsr/ConfigurationImpl.java</include><include>est/java/org/apache/bval/jsr/example/Country.java</include><include>ain/java/org/apache/bval/jsr/ConstraintDefaults.java</include><include>ain/java/org/apache/bval/jsr/util/PathImpl.java</include><include>est/java/org/apache/bval/jsr/example/Engine.java</include><include>c/test/java/org/apache/bval/extras/constraints/checkdigit/SedolCheckDigitTest.java</include><include>ain/java/org/apache/bval/constraints/EmailValidator.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ElementD.java</include><include>ain/java/org/apache/bval/jsr/descriptor/CrossParameterD.java</include><include>est/java/org/apache/bval/jsr/groups/GInterface1.java</include><include>ain/java/org/apache/bval/constraints/AssertTrueValidator.java</include><include>est/java/org/apache/bval/jsr/groups/inheritance/BillableUser.java</include><include>ain/java/org/apache/bval/jsr/metadata/MetadataSource.java</include><include>est/java/org/apache/bval/jsr/xml/Demo.java</include><include>c/main/java/org/apache/bval/extras/constraints/checkdigit/Sedol.java</include><include>ain/java/org/apache/bval/jsr/job/ValidateProperty.java</include><include>ain/java/org/apache/bval/constraints/MaxValidatorForString.java</include><include>ain/java/org/apache/bval/jsr/descriptor/ConstraintD.java</include><include>ain/java/org/apache/bval/jsr/ConstraintCached.java</include><include>ain/java/org/apache/bval/jsr/valueextraction/MapExtractor.java</include><include>est/java/org/apache/bval/jsr/groups/CollectionValidationTest.java</include><include>ain/java/org/apache/bval/jsr/descriptor/Finder.java</include><include>ain/java/org/apache/bval/jsr/util/LRUCache.java</include><include>est/java/org/apache/bval/jsr/example/Customer.java</include><include>ain/java/org/apache/bval/jsr/ParticipantFactory.java</include><include>ain/java/org/apache/bval/jsr/ApacheValidatorConfiguration.java</include><include>ain/java/org/apache/bval/jsr/ApacheFactoryContext.java</include><include>ain/java/org/apache/bval/jsr/metadata/XmlBuilder.java</include><include>ain/java/org/apache/bval/jsr/DefaultValidationProviderResolver.java</include><include>est/java/org/apache/bval/constraints/HasValue.java</include><include>ain/java/org/apache/bval/constraints/NullValidator.java</include><include>est/java/org/apache/bval/jsr/xml/TestConstraintValidatorFactory.java</include><include>est/java/org/apache/bval/jsr/groups/BillableUser.java</include><include>ain/java/org/apache/bval/constraints/NotNullValidator.java</include><include>ain/java/org/apache/bval/cdi/BValExtension.java</include><include>ain/java/org/apache/bval/jsr/util/ContainerElementNodeBuilderCustomizableContextImpl.java</include><include>ain/java/org/apache/bval/constraints/DigitsValidatorForString.java</include><include>ain/java/org/apache/bval/jsr/util/AnnotationsManager.java</include><include>ain/java/org/apache/bval/jsr/job/ValidateBean.java</include><include>est/java/org/apache/bval/jsr/example/Address.java</include></includes><excludes><exclude>**.java</exclude></excludes></configuration>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -388,9 +415,9 @@
                                 <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             </manifest>
                             <manifestEntries>
+                                <Built-By>${built.by}</Built-By>
                                 <Implementation-Build>${buildNumber}</Implementation-Build>
-                                <Specification-Title>JSR-380 Bean Validation</Specification-Title>
-                                <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                                <Specification-Title>Bean Validation</Specification-Title>
                                 <Specification-Version>2.0</Specification-Version>
                             </manifestEntries>
                         </archive>
@@ -399,16 +426,17 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${plugin.javadoc.version}</version>
                     <configuration>
                         <encoding>${project.build.sourceEncoding}</encoding>
                         <additionalparam>${javadoc.additionalparam}</additionalparam>
                         <aggregate>true</aggregate>
-                        <subpackages>org.apache</subpackages>
+                        <doclint>none</doclint>
                         <verbose>false</verbose>
+                        <release>11</release>
                         <maxmemory>512m</maxmemory>
                         <links>
-                            <link>http://docs.oracle.com/javase/8/docs/api</link>
-
+                            <link>http://docs.oracle.com/javase/11/docs/api</link>
                         </links>
                     </configuration>
                 </plugin>
@@ -432,12 +460,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>2.4.3</version>
+                    <version>3.5.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>jdepend-maven-plugin</artifactId>
-                    <version>2.0-beta-2</version>
+                    <version>2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
@@ -462,7 +490,7 @@
                                 <goal>verify-legal-files</goal>
                             </goals>
                             <configuration>
-                                
+                                <!-- Fail the build if any artifacts are missing legal files -->
                                 <strict>true</strict>
                             </configuration>
                         </execution>
@@ -471,7 +499,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.11</version>
+                    <version>0.16.1</version>
                     <executions>
                         <execution>
                             <phase>verify</phase>
@@ -487,10 +515,10 @@
                             <exclude>**/*/MANIFEST.MF</exclude>
                             <exclude>.git</exclude>
                             <exclude>.gitignore</exclude>
-                            
+                            <!-- General informational files -->
                             <exclude>README.txt</exclude>
                             <exclude>CHANGES.txt</exclude>
-                            
+                            <!-- generated content -->
                             <exclude>.idea</exclude>
                             <exclude>release.properties</exclude>
                             <exclude>DEPENDENCIES</exclude>
@@ -502,7 +530,7 @@
                             <exclude>**/*.iml</exclude>
                             <exclude>**/*.ipr</exclude>
                             <exclude>**/*.iws</exclude>
-                            <exclude>**/META-INF/services/*</exclude> 
+                            <exclude>**/META-INF/services/*</exclude> <!-- depending service loader it can fail if a comment is added -->
                             <exclude>**/dependency-reduced-pom.xml</exclude>
                         </excludes>
                     </configuration>
@@ -510,20 +538,20 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>3.3.1</version>
                     <dependencies>
                         <dependency>
                             <groupId>org.codehaus.plexus</groupId>
                             <artifactId>plexus-velocity</artifactId>
-                            <version>1.1.3</version>
+                            <version>2.1.0</version>
                         </dependency>
                     </dependencies>
                 </plugin>
-                
+                <!-- inherited from apache-10.pom, but need config updates -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
+                    <version>3.0.1</version>
                     <configuration>
                         <useReleaseProfile>false</useReleaseProfile>
                         <arguments>-Papache-release</arguments>
@@ -536,59 +564,40 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.20.1</version>
+                    <version>3.2.5</version>
+                    <configuration>
+                        <trimStackTrace>false</trimStackTrace>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>2.20.1</version>
+                    <version>3.2.5</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>
-                    <version>2.3.2</version>
+                    <version>3.0.5</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.1.1</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-weaver-maven-plugin</artifactId>
-                    <version>${commons.weaver.version}</version>
-                    <configuration>
-                        <verbose>true</verbose>
-                        <weaverConfig>
-                            <privilizer.policy>${privilizer.policy}</privilizer.policy>
-                        </weaverConfig>
-                    </configuration>
-                    <executions>
-                        <execution>
-                        	<id>weaver-prepare</id>
-                            <goals>
-                                <goal>prepare</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                        	<id>weaver-weave</id>
-                            <goals>
-                                <goal>weave</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.commons</groupId>
-                            <artifactId>commons-weaver-privilizer</artifactId>
-                            <version>${commons.weaver.version}</version>
-                        </dependency>
-                    </dependencies>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.6.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.netbeans.tools</groupId>
+                    <artifactId>sigtest-maven-plugin</artifactId>
+                    <version>1.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -657,7 +666,48 @@
                 </execution>
               </executions>
             </plugin>
-            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <skipDeploy>true</skipDeploy>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>site-stage</id>
+                        <phase>post-site</phase>
+                        <goals>
+                            <goal>stage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-publish-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <pubScmUrl>${site.url}</pubScmUrl>
+                    <checkoutDirectory>${site.checkout}</checkoutDirectory>
+                    <serverId>${site.server}</serverId>
+                    <tryUpdate>true</tryUpdate>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>scm-publish</id>
+                        <phase>site-deploy</phase><!-- deploy site with maven-scm-publish-plugin -->
+                        <goals>
+                            <goal>publish-scm</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Don't include in all builds for now
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+            </plugin>
+            -->
         </plugins>
     </build>
 
@@ -665,7 +715,8 @@
         <module>bval-jsr</module>
         <module>bval-extras</module>
         <module>bval-tck</module>
-        <module>bundle</module>
+        <module>bval-bundle</module>
+        <module>bval-perf</module>
     </modules>
 
 </project>

@@ -29,13 +29,14 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 import org.apache.bval.cdi.BValExtension;
 import org.apache.bval.jsr.util.ToUnmodifiable;
@@ -55,8 +56,8 @@ class ParticipantFactory implements Closeable {
 
     ParticipantFactory(ClassLoader... loaders) {
         super();
-        this.loaders = Collections.unmodifiableList(Arrays.asList(Validate
-            .noNullElements(loaders, "null %s specified at index %d", ClassLoader.class.getSimpleName()).clone()));
+        this.loaders = Arrays.asList(loaders).stream().filter(Objects::nonNull).collect(ToUnmodifiable.list());
+        Validate.validState(!this.loaders.isEmpty(), "no classloaders available");
     }
 
     @Override
@@ -71,7 +72,7 @@ class ParticipantFactory implements Closeable {
         return newInstance(loadClass(classname));
     }
 
-    <T> Set<T> loadServices(Class<T> type) {
+    <T> Set<T> loadServices(Class<T> type) { // todo: enable somehow to cache shared classloader (think tomcat/tomee)
         Validate.notNull(type);
         final Set<URL> resources = new LinkedHashSet<>();
         final String resourceName = META_INF_SERVICES + type.getName();
@@ -84,7 +85,7 @@ class ParticipantFactory implements Closeable {
                 log.log(Level.SEVERE, "Error searching for resource(s) " + resourceName, e);
             }
         }
-        return resources.stream().map(this::read).flatMap(Collection::stream).<T> map(this::create)
+        return resources.stream().distinct().map(this::read).flatMap(Collection::stream).<T> map(this::create)
             .collect(ToUnmodifiable.set());
     }
 
