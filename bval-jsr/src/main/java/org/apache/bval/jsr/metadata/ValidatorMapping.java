@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import jakarta.validation.ConstraintValidator;
+import javax.validation.ConstraintValidator;
 
 import org.apache.bval.util.Validate;
 

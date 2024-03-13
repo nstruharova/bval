@@ -26,9 +26,10 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Set;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.metadata.ConstraintDescriptor;
-import jakarta.validation.metadata.ElementDescriptor.ConstraintFinder;
+import javax.enterprise.inject.Vetoed;
+import javax.validation.ConstraintViolation;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
 
 /**
  * Description: <br/>

@@ -25,8 +25,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.validation.metadata.ConstraintDescriptor;
-import jakarta.validation.metadata.ElementDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor;
 
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.GroupsComputer;
@@ -88,13 +88,13 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
     }
 
     @Override
-    public boolean hasConstraints() {
+    public final boolean hasConstraints() {
         return !constraints.isEmpty();
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
+    public final Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
         return (Set) constraints;
     }
 

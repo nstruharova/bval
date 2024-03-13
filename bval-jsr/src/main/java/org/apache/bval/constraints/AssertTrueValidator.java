@@ -18,9 +18,9 @@
  */
 package org.apache.bval.constraints;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
-import jakarta.validation.constraints.AssertTrue;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.constraints.AssertTrue;
 
 /**
  * Description: assert that value is true<br/>

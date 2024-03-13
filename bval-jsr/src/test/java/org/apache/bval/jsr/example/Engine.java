@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.example;
 
-import jakarta.validation.constraints.Pattern;
+import javax.validation.constraints.Pattern;
 
 public class Engine {
     // TODO See about Windows bug with container @ Field#getAnnotatedType()

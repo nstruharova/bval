@@ -22,12 +22,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.stream.Stream;
 
-import jakarta.validation.ValidationException;
-import jakarta.validation.metadata.PropertyDescriptor;
+import javax.validation.ValidationException;
+import javax.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.PathImpl;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -49,11 +50,15 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public Object getValue(Object parent) throws Exception {
-            Reflection.makeAccessible(getTarget());
+            final boolean mustUnset = Reflection.setAccessible(getTarget(), true);
             try {
                 return getTarget().get(parent);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException(e);
+            } finally {
+                if (mustUnset) {
+                    Reflection.setAccessible(getTarget(), false);
+                }
             }
         }
     }
@@ -71,11 +76,15 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public Object getValue(Object parent) throws Exception {
-            Reflection.makeAccessible(getTarget());
+            final boolean mustUnset = Reflection.setAccessible(getTarget(), true);
             try {
                 return getTarget().invoke(parent);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new IllegalArgumentException(e);
+            } finally {
+                if (mustUnset) {
+                    Reflection.setAccessible(getTarget(), false);
+                }
             }
         }
     }
@@ -85,6 +94,7 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
     }
 
     public final Stream<GraphContext> read(GraphContext context) {
+        Validate.notNull(context);
         if (context.getValue() == null) {
             return Stream.empty();
         }

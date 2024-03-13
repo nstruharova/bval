@@ -20,8 +20,8 @@ package org.apache.bval.jsr.valueextraction;
 
 import java.util.Map;
 
-import jakarta.validation.valueextraction.ExtractedValue;
-import jakarta.validation.valueextraction.ValueExtractor;
+import javax.validation.valueextraction.ExtractedValue;
+import javax.validation.valueextraction.ValueExtractor;
 
 public abstract class MapExtractor {
     public static class ForKey implements ValueExtractor<Map<@ExtractedValue ?, ?>> {

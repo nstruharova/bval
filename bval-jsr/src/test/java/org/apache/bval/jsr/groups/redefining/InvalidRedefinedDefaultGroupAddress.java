@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr.groups.redefining;
 
-import jakarta.validation.GroupSequence;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.GroupSequence;
+import javax.validation.constraints.NotNull;
 
 /**
  * If a @GroupSequence redefining the Default group for a class A does not

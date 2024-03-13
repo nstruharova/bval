@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.example;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 /**
  * Description: <br/>

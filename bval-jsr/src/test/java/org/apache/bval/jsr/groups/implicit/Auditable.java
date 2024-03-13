@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.groups.implicit;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 /**
  * Auditable object contract.

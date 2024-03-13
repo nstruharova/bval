@@ -16,21 +16,6 @@
  */
 package org.apache.bval.jsr.valueextraction;
 
-import org.apache.bval.jsr.metadata.ContainerElementKey;
-import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.ObjectUtils;
-import org.apache.bval.util.StringUtils;
-import org.apache.bval.util.Validate;
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.bval.util.reflection.Reflection.Interfaces;
-import org.apache.bval.util.reflection.TypeUtils;
-
-import jakarta.validation.ConstraintDeclarationException;
-import jakarta.validation.metadata.ValidateUnwrappedValue;
-import jakarta.validation.valueextraction.UnwrapByDefault;
-import jakarta.validation.valueextraction.ValueExtractor;
-import jakarta.validation.valueextraction.ValueExtractorDeclarationException;
-import jakarta.validation.valueextraction.ValueExtractorDefinitionException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
@@ -46,13 +31,30 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.metadata.ValidateUnwrappedValue;
+import javax.validation.valueextraction.UnwrapByDefault;
+import javax.validation.valueextraction.ValueExtractor;
+import javax.validation.valueextraction.ValueExtractorDeclarationException;
+import javax.validation.valueextraction.ValueExtractorDefinitionException;
+
+import org.apache.bval.jsr.metadata.ContainerElementKey;
+import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Lazy;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.StringUtils;
+import org.apache.bval.util.Validate;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.bval.util.reflection.Reflection.Interfaces;
+import org.apache.bval.util.reflection.TypeUtils;
 
 /**
  * {@link ValueExtractor} collection of some level of a bean validation hierarchy.
@@ -220,8 +222,9 @@ public class ValueExtractors {
     }
 
     private final ValueExtractors parent;
-    private final Map<ContainerElementKey, ValueExtractor<?>> valueExtractors = new ConcurrentHashMap<>();
-    private final Map<ContainerElementKey, ValueExtractor<?>> searchCache = new ConcurrentHashMap<>();
+    private final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> valueExtractors = new Lazy<>(TreeMap::new);
+    private final Lazy<Set<ValueExtractors>> children = new Lazy<>(HashSet::new);
+    private final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> searchCache = new Lazy<>(HashMap::new);
     private final OnDuplicateContainerElementKey onDuplicateContainerElementKey;
 
     public ValueExtractors() {
@@ -240,8 +243,7 @@ public class ValueExtractors {
     private ValueExtractors(ValueExtractors parent, OnDuplicateContainerElementKey onDuplicateContainerElementKey,
         Map<ContainerElementKey, ValueExtractor<?>> backingMap) {
         this(parent, onDuplicateContainerElementKey);
-        this.valueExtractors.clear();
-        this.valueExtractors.putAll(backingMap);
+        this.valueExtractors.reset(backingMap);
     }
 
     public ValueExtractors createChild() {
@@ -249,16 +251,19 @@ public class ValueExtractors {
     }
 
     public ValueExtractors createChild(OnDuplicateContainerElementKey onDuplicateContainerElementKey) {
-        return new ValueExtractors(this, onDuplicateContainerElementKey);
+        final ValueExtractors child = new ValueExtractors(this, onDuplicateContainerElementKey);
+        children.get().add(child);
+        return child;
     }
 
     public void add(ValueExtractor<?> extractor) {
+        Validate.notNull(extractor);
         final ContainerElementKey key = ContainerElementKey.forValueExtractor(extractor);
         if (key == null) {
             Exceptions.raise(IllegalStateException::new, "Computed null %s for %s",
                 ContainerElementKey.class.getSimpleName(), extractor);
         }
-        final Map<ContainerElementKey, ValueExtractor<?>> m = valueExtractors;
+        final Map<ContainerElementKey, ValueExtractor<?>> m = valueExtractors.get();
         if (onDuplicateContainerElementKey == OnDuplicateContainerElementKey.EXCEPTION) {
             synchronized (this) {
                 if (m.containsKey(key)) {
@@ -270,19 +275,19 @@ public class ValueExtractors {
         } else {
             m.put(key, extractor);
         }
-        searchCache.clear();
+        children.optional().ifPresent(s -> s.stream().forEach(ValueExtractors::clearCache));
     }
 
     public Map<ContainerElementKey, ValueExtractor<?>> getValueExtractors() {
-        final Map<ContainerElementKey, ValueExtractor<?>> result = new HashMap<>();
+        final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> result = new Lazy<>(HashMap::new);
         populate(result);
-        return result;
+        return result.optional().orElseGet(Collections::emptyMap);
     }
 
     public ValueExtractor<?> find(ContainerElementKey key) {
-        final ValueExtractor<?> cacheHit = searchCache.get(key);
-        if (cacheHit != null) {
-            return cacheHit;
+        final Optional<ValueExtractor<?>> cacheHit = searchCache.optional().map(m -> m.get(key));
+        if (cacheHit.isPresent()) {
+            return cacheHit.get();
         }
         final Map<ContainerElementKey, ValueExtractor<?>> allValueExtractors = getValueExtractors();
         if (allValueExtractors.containsKey(key)) {
@@ -295,7 +300,7 @@ public class ValueExtractors {
         final Optional<ValueExtractor<?>> result =
             maximallySpecific(candidates.keySet(), ve -> candidates.get(ve).getContainerClass());
         if (result.isPresent()) {
-            searchCache.put(key, result.get());
+            searchCache.get().put(key, result.get());
             return result.get();
         }
         throw Exceptions.create(ConstraintDeclarationException::new, "Could not determine %s for %s",
@@ -325,11 +330,12 @@ public class ValueExtractors {
         return result;
     }
 
-    private void populate(Map<ContainerElementKey, ValueExtractor<?>> target) {
-        if (parent != null) {
-            parent.populate(target);
-        }
-        target.putAll(valueExtractors);
+    private void populate(Supplier<Map<ContainerElementKey, ValueExtractor<?>>> target) {
+        Optional.ofNullable(parent).ifPresent(p -> p.populate(target));
+        valueExtractors.optional().ifPresent(m -> target.get().putAll(m));
     }
 
+    private void clearCache() {
+        searchCache.optional().ifPresent(Map::clear);
+    }
 }

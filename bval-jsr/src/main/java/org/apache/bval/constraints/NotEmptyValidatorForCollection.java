@@ -18,18 +18,18 @@
  */
 package org.apache.bval.constraints;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 import java.util.Collection;
 
 /**
  * Description: <br/>
  */
 public class NotEmptyValidatorForCollection
-    implements ConstraintValidator<jakarta.validation.constraints.NotEmpty, Collection<?>> {
+    implements ConstraintValidator<javax.validation.constraints.NotEmpty, Collection<?>> {
 
     @Override
     public boolean isValid(Collection<?> value, ConstraintValidatorContext context) {
-        return !(value == null || value.isEmpty());
+        return value == null || !value.isEmpty();
     }
 }

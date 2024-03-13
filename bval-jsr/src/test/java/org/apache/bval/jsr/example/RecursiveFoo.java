@@ -20,7 +20,7 @@ package org.apache.bval.jsr.example;
 
 import org.apache.bval.constraints.NotEmpty;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 

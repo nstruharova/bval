@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import jakarta.validation.Path;
+import javax.validation.Path;
 
 import org.apache.bval.util.Comparators;
 import org.apache.bval.util.Exceptions;

@@ -38,18 +38,17 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.validation.ConstraintDeclarationException;
-import jakarta.validation.ConstraintTarget;
-import jakarta.validation.Payload;
-import jakarta.validation.ValidationException;
-import jakarta.validation.groups.Default;
-import jakarta.xml.bind.JAXBElement;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintTarget;
+import javax.validation.Payload;
+import javax.validation.ValidationException;
+import javax.validation.groups.Default;
+import javax.xml.bind.JAXBElement;
 
-import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.groups.GroupConversion;
-import org.apache.bval.jsr.util.AnnotationProxyBuilder;
 import org.apache.bval.jsr.util.ToUnmodifiable;
+import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.jsr.xml.AnnotationType;
 import org.apache.bval.jsr.xml.BeanType;
 import org.apache.bval.jsr.xml.ClassType;
@@ -82,7 +81,7 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 public class XmlBuilder {
     //@formatter:off
     public enum Version {
-        v10("1.0"), v11("1.1"), v20("2.0"), v30("3.0");
+        v10("1.0"), v11("1.1"), v20("2.0");
         //@formatter:on
 
         static Version of(ConstraintMappingsType constraintMappings) {
@@ -476,14 +475,13 @@ public class XmlBuilder {
         return lazy.get();
     }
 
-    private final ApacheValidatorFactory validatorFactory;
     private final ConstraintMappingsType constraintMappings;
     private final Version version;
 
-    public XmlBuilder(ApacheValidatorFactory validatorFactory, ConstraintMappingsType constraintMappings) {
+    public XmlBuilder(ConstraintMappingsType constraintMappings) {
         super();
-        this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
-        this.constraintMappings = Validate.notNull(constraintMappings, "constraintMappings");
+        this.constraintMappings = constraintMappings;
+        Validate.notNull(constraintMappings, "constraintMappings");
         this.version = Version.of(constraintMappings);
         new MappingValidator(constraintMappings, this::resolveClass).validateMappings();
     }
@@ -520,18 +518,15 @@ public class XmlBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<T> loadClass(String fqn) {
-        ClassLoader loader = Reflection.loaderFromThreadOrClass(XmlBuilder.class);
+    private <T> Class<T> loadClass(final String fqn) {
+        ClassLoader loader = Reflection.getClassLoader(XmlBuilder.class);
         if (loader == null) {
             loader = getClass().getClassLoader();
         }
         try {
-            if (fqn != null) {
-                fqn = fqn.replace("\n", "").replace("\r", "").replaceAll("\\s", "").trim();
-            }
             return (Class<T>) Class.forName(fqn, true, loader);
         } catch (ClassNotFoundException ex) {
-            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %s", fqn);
+            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %d", fqn);
         }
     }
 
@@ -549,8 +544,7 @@ public class XmlBuilder {
 
     private <A extends Annotation, T> A createConstraint(final ConstraintType constraint, ConstraintTarget target) {
         final Class<A> annotationClass = this.<A> loadClass(toQualifiedClassName(constraint.getAnnotation()));
-        final AnnotationProxyBuilder<A> annoBuilder =
-            validatorFactory.getAnnotationsManager().buildProxyFor(annotationClass);
+        final AnnotationProxyBuilder<A> annoBuilder = new AnnotationProxyBuilder<A>(annotationClass);
 
         if (constraint.getMessage() != null) {
             annoBuilder.setMessage(constraint.getMessage());
@@ -682,8 +676,7 @@ public class XmlBuilder {
     }
 
     private <A extends Annotation> Annotation createAnnotation(AnnotationType annotationType, Class<A> returnType) {
-        final AnnotationProxyBuilder<A> metaAnnotation =
-            validatorFactory.getAnnotationsManager().buildProxyFor(returnType);
+        final AnnotationProxyBuilder<A> metaAnnotation = new AnnotationProxyBuilder<>(returnType);
         for (ElementType elementType : annotationType.getElement()) {
             final String name = elementType.getName();
             metaAnnotation.setValue(name, getElementValue(elementType, getAnnotationParameterType(returnType, name)));

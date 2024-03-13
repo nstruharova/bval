@@ -18,8 +18,8 @@
  */
 package org.apache.bval.constraints;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 
 /**
  * Description: not implemented (test only)<br/>

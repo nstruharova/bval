@@ -21,10 +21,10 @@ package org.apache.bval.jsr.descriptor;
 import java.lang.reflect.Executable;
 import java.util.List;
 
-import jakarta.validation.metadata.CrossParameterDescriptor;
-import jakarta.validation.metadata.ExecutableDescriptor;
-import jakarta.validation.metadata.ParameterDescriptor;
-import jakarta.validation.metadata.ReturnValueDescriptor;
+import javax.validation.metadata.CrossParameterDescriptor;
+import javax.validation.metadata.ExecutableDescriptor;
+import javax.validation.metadata.ParameterDescriptor;
+import javax.validation.metadata.ReturnValueDescriptor;
 
 public abstract class ExecutableD<E extends Executable, R extends MetadataReader.ForExecutable<E, R>, SELF extends ExecutableD<E, R, SELF>>
     extends ElementD.NonRoot<BeanD<?>, E, R> implements ExecutableDescriptor {
@@ -33,8 +33,6 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
     private final ReturnValueD<SELF, E> returnValue;
     private final List<ParameterD<SELF>> parameters;
     private final CrossParameterD<SELF, E> crossParameter;
-    private final boolean parametersAreConstrained;
-    private final boolean returnValueIsConstrained;
 
     @SuppressWarnings("unchecked")
     protected ExecutableD(R reader, BeanD<?> parent) {
@@ -45,8 +43,6 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
         returnValue = reader.getReturnValueDescriptor((SELF) this);
         parameters = reader.getParameterDescriptors((SELF) this);
         crossParameter = reader.getCrossParameterDescriptor((SELF) this);
-        parametersAreConstrained = parameters.stream().anyMatch(DescriptorManager::isConstrained) || crossParameter.hasConstraints();
-        returnValueIsConstrained = DescriptorManager.isConstrained(returnValue);
     }
 
     @Override
@@ -72,11 +68,11 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
 
     @Override
     public final boolean hasConstrainedParameters() {
-        return parametersAreConstrained;
+        return parameters.stream().anyMatch(DescriptorManager::isConstrained) || getCrossParameterDescriptor().hasConstraints();
     }
 
     @Override
     public final boolean hasConstrainedReturnValue() {
-        return returnValueIsConstrained;
+        return DescriptorManager.isConstrained(returnValue);
     }
 }

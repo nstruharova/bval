@@ -39,8 +39,8 @@ import java.util.GregorianCalendar;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.constraints.Past;
+import javax.validation.ConstraintValidator;
+import javax.validation.constraints.Past;
 
 /**
  * Defines built-in {@link ConstraintValidator} implementations for {@link Past}.

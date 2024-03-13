@@ -23,13 +23,14 @@ import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Objects;
 
-import jakarta.validation.Path;
-import jakarta.validation.ValidationException;
+import javax.validation.Path;
+import javax.validation.ValidationException;
 
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public class GraphContext {
@@ -45,8 +46,8 @@ public class GraphContext {
 
     private GraphContext(ApacheFactoryContext validatorContext, PathImpl path, Object value, GraphContext parent) {
         super();
-        this.validatorContext = validatorContext;
-        this.path = path;
+        this.validatorContext = Validate.notNull(validatorContext, "validatorContext");
+        this.path = Validate.notNull(path, "path");
         this.value = value;
         this.parent = parent;
     }
@@ -64,16 +65,16 @@ public class GraphContext {
     }
 
     public GraphContext child(NodeImpl node, Object value) {
-        // Validate.notNull(node, "node");
+        Validate.notNull(node, "node");
         final PathImpl p = PathImpl.copy(path);
         p.addNode(node);
         return new GraphContext(validatorContext, p, value, this);
     }
 
     public GraphContext child(Path p, Object value) {
-        // Validate.notNull(p, "Path");
+        Validate.notNull(p, "Path");
         final PathImpl impl = PathImpl.of(p);
-        // Validate.isTrue(impl.isSubPathOf(path), "%s is not a subpath of %s", p, path);
+        Validate.isTrue(impl.isSubPathOf(path), "%s is not a subpath of %s", p, path);
         return new GraphContext(validatorContext, impl == p ? PathImpl.copy(impl) : impl, value, this);
     }
 
@@ -119,6 +120,7 @@ public class GraphContext {
     }
 
     public ContainerElementKey runtimeKey(ContainerElementKey key) {
+        Validate.notNull(key);
         if (value != null) {
             final Class<?> containerClass = key.getContainerClass();
             final Class<? extends Object> runtimeType = value.getClass();

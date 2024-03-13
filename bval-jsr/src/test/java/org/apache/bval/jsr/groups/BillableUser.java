@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr.groups;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.groups.Default;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 
 /**
  * User representation

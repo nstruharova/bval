@@ -27,8 +27,8 @@ import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 
 public abstract class TimeValidator<A extends Annotation, T> implements ConstraintValidator<A, T> {
     protected static final Comparator<ChronoLocalDate> CHRONO_LOCAL_DATE_COMPARATOR =

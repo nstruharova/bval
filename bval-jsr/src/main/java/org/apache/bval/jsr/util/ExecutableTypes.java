@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
-import jakarta.validation.executable.ExecutableType;
+import javax.validation.executable.ExecutableType;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;

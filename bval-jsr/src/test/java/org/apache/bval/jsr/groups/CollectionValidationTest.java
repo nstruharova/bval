@@ -18,19 +18,7 @@
  */
 package org.apache.bval.jsr.groups;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Set;
-
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
-
+import junit.framework.TestCase;
 import org.apache.bval.jsr.DefaultMessageInterpolator;
 import org.apache.bval.jsr.example.Address;
 import org.apache.bval.jsr.example.Author;
@@ -41,13 +29,19 @@ import org.apache.bval.jsr.example.Employee;
 import org.apache.bval.jsr.example.Library;
 import org.apache.bval.jsr.example.Person;
 import org.apache.bval.jsr.util.TestUtils;
-import org.junit.Before;
-import org.junit.Test;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Description: <br/>
  */
-public class CollectionValidationTest {
+public class CollectionValidationTest extends TestCase {
     static ValidatorFactory factory;
 
     static {
@@ -63,8 +57,9 @@ public class CollectionValidationTest {
     /**
      * {@inheritDoc}
      */
-    @Before
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         validator = createValidator();
     }
 
@@ -77,7 +72,6 @@ public class CollectionValidationTest {
         return factory.getValidator();
     }
 
-    @Test
     public void testValidateList() {
         Author author = new Author();
         author.setFirstName("Peter");
@@ -122,7 +116,6 @@ public class CollectionValidationTest {
         assertNotNull(TestUtils.getViolation(violations, "addresses[2].addressline1"));
     }
 
-    @Test
     public void testValidateMapAndRedefinedDefaultGroupOnNonRootBean() {
         Library lib = new Library();
         lib.setLibraryName("Leibnitz Bibliothek");
@@ -134,7 +127,7 @@ public class CollectionValidationTest {
         book1.setSubtitle("How it really works");
         Author hawking = new Author();
         hawking.setFirstName("Stephen");
-        hawking.setLastName("Hawking");
+        hawking.setFirstName("Hawking");
         hawking.setAddresses(new ArrayList<Address>(1));
         Address adr = new Address();
         adr.setAddressline1("Street 1");
@@ -181,7 +174,6 @@ public class CollectionValidationTest {
         assertNotNull(TestUtils.getViolation(violations, "taggedBooks[science].author.addresses[0].city"));
     }
 
-    @Test
     public void testValidateArray() {
         Library lib = new Library();
         lib.setLibraryName("Unibibliothek");

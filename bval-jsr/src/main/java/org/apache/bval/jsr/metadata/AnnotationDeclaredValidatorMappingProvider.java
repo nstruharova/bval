@@ -20,8 +20,8 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
 
-import jakarta.validation.Constraint;
-import jakarta.validation.ConstraintValidator;
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
 
 import org.apache.bval.util.Validate;
 

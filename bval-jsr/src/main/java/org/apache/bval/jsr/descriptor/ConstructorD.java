@@ -20,7 +20,7 @@ package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.Constructor;
 
-import jakarta.validation.metadata.ConstructorDescriptor;
+import javax.validation.metadata.ConstructorDescriptor;
 
 public class ConstructorD<T> extends ExecutableD<Constructor<? extends T>, MetadataReader.ForConstructor<T>, ConstructorD<T>>
     implements ConstructorDescriptor {

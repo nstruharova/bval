@@ -22,7 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import jakarta.enterprise.util.AnnotationLiteral;
+import javax.enterprise.util.AnnotationLiteral;
 
 /**
  * Base class for AnnotationLiterals which have no members.

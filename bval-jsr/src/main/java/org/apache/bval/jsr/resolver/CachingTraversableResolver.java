@@ -16,8 +16,8 @@
  */
 package org.apache.bval.jsr.resolver;
 
-import jakarta.validation.Path;
-import jakarta.validation.TraversableResolver;
+import javax.validation.Path;
+import javax.validation.TraversableResolver;
 import java.lang.annotation.ElementType;
 import java.util.HashMap;
 import java.util.Map;

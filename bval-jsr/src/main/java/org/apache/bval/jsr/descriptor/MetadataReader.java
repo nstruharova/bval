@@ -44,15 +44,15 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import jakarta.validation.ConstraintDeclarationException;
-import jakarta.validation.GroupDefinitionException;
-import jakarta.validation.GroupSequence;
-import jakarta.validation.ParameterNameProvider;
-import jakarta.validation.Valid;
-import jakarta.validation.groups.ConvertGroup;
-import jakarta.validation.groups.Default;
-import jakarta.validation.metadata.PropertyDescriptor;
-import jakarta.validation.metadata.Scope;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.GroupDefinitionException;
+import javax.validation.GroupSequence;
+import javax.validation.ParameterNameProvider;
+import javax.validation.Valid;
+import javax.validation.groups.ConvertGroup;
+import javax.validation.groups.Default;
+import javax.validation.metadata.PropertyDescriptor;
+import javax.validation.metadata.Scope;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
@@ -65,10 +65,10 @@ import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.Signature;
-import org.apache.bval.jsr.util.AnnotationProxyBuilder;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
+import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
@@ -123,8 +123,7 @@ class MetadataReader {
                 }
             }
             if (mustRewrite) {
-                final AnnotationProxyBuilder<A> builder =
-                    validatorFactory.getAnnotationsManager().buildProxyFor(constraint);
+                final AnnotationProxyBuilder<A> builder = new AnnotationProxyBuilder<A>(constraint);
                 builder.setGroups(groups);
                 return builder.createAnnotation();
             }

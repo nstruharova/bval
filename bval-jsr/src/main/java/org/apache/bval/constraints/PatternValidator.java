@@ -18,8 +18,8 @@
  */
 package org.apache.bval.constraints;
 
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Pattern.Flag;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Pattern.Flag;
 
 /**
  * validator using a regular expression, based on the jsr Pattern constraint annotation.

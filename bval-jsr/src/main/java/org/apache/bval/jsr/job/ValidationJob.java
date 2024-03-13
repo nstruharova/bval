@@ -37,21 +37,21 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ElementKind;
-import jakarta.validation.MessageInterpolator;
-import jakarta.validation.Path;
-import jakarta.validation.TraversableResolver;
-import jakarta.validation.UnexpectedTypeException;
-import jakarta.validation.ValidationException;
-import jakarta.validation.constraintvalidation.ValidationTarget;
-import jakarta.validation.groups.Default;
-import jakarta.validation.metadata.CascadableDescriptor;
-import jakarta.validation.metadata.ContainerDescriptor;
-import jakarta.validation.metadata.PropertyDescriptor;
-import jakarta.validation.metadata.ValidateUnwrappedValue;
-import jakarta.validation.valueextraction.ValueExtractor;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintViolation;
+import javax.validation.ElementKind;
+import javax.validation.MessageInterpolator;
+import javax.validation.Path;
+import javax.validation.TraversableResolver;
+import javax.validation.UnexpectedTypeException;
+import javax.validation.ValidationException;
+import javax.validation.constraintvalidation.ValidationTarget;
+import javax.validation.groups.Default;
+import javax.validation.metadata.CascadableDescriptor;
+import javax.validation.metadata.ContainerDescriptor;
+import javax.validation.metadata.PropertyDescriptor;
+import javax.validation.metadata.ValidateUnwrappedValue;
+import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
@@ -79,7 +79,6 @@ import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public abstract class ValidationJob<T> {
-    private static final ConstraintValidator NOOP_VALIDATOR = (o, ctx) -> true;
 
     public abstract class Frame<D extends ElementD<?, ?>> {
         protected final Frame<?> parent;
@@ -196,32 +195,30 @@ public abstract class ValidationJob<T> {
 
         @SuppressWarnings({ "rawtypes" })
         private ConstraintValidator getConstraintValidator(ConstraintD<?> constraint) {
-            return validatorContext.getOrComputeConstraintValidator(constraint, () -> {
-                final Class<? extends ConstraintValidator> constraintValidatorClass =
-                        new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
-                                getValidationTarget(), computeValidatedType(constraint)).get();
+            final Class<? extends ConstraintValidator> constraintValidatorClass =
+                new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
+                    getValidationTarget(), computeValidatedType(constraint)).get();
 
-                if (constraintValidatorClass == null) {
-                    if (constraint.getComposingConstraints().isEmpty()) {
-                        Exceptions.raise(UnexpectedTypeException::new, "No %s type located for non-composed constraint %s",
-                                ConstraintValidator.class.getSimpleName(), constraint);
-                    }
-                    return NOOP_VALIDATOR;
+            if (constraintValidatorClass == null) {
+                if (constraint.getComposingConstraints().isEmpty()) {
+                    Exceptions.raise(UnexpectedTypeException::new, "No %s type located for non-composed constraint %s",
+                        ConstraintValidator.class.getSimpleName(), constraint);
                 }
-                ConstraintValidator constraintValidator = null;
-                Exception cause = null;
-                try {
-                    constraintValidator =
-                            validatorContext.getConstraintValidatorFactory().getInstance(constraintValidatorClass);
-                } catch (Exception e) {
-                    cause = e;
-                }
-                if (constraintValidator == null) {
-                    Exceptions.raise(ValidationException::new, cause, "Unable to get %s instance from %s",
-                            constraintValidatorClass.getName(), validatorContext.getConstraintValidatorFactory());
-                }
-                return constraintValidator;
-            });
+                return null;
+            }
+            ConstraintValidator constraintValidator = null;
+            Exception cause = null;
+            try {
+                constraintValidator =
+                    validatorContext.getConstraintValidatorFactory().getInstance(constraintValidatorClass);
+            } catch (Exception e) {
+                cause = e;
+            }
+            if (constraintValidator == null) {
+                Exceptions.raise(ValidationException::new, cause, "Unable to get %s instance from %s",
+                    constraintValidatorClass.getName(), validatorContext.getConstraintValidatorFactory());
+            }
+            return constraintValidator;
         }
 
         private Class<?> computeValidatedType(ConstraintD<?> constraint) {
@@ -251,7 +248,6 @@ public abstract class ValidationJob<T> {
             this.realContext = context;
         }
 
-        @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
             final Lazy<Set<Frame<?>>> propertyFrames = new Lazy<>(this::propertyFrames);
@@ -562,6 +558,7 @@ public abstract class ValidationJob<T> {
             final Consumer<ConstraintViolation<T>> sink = results.consumer(Set::add);
 
             completedValidations = new ConcurrentHashMap<>();
+
             try {
                 baseFrame.process(groups.asStrategy(), sink);
             } finally {
@@ -576,14 +573,8 @@ public abstract class ValidationJob<T> {
 
     @SuppressWarnings("unchecked")
     private <O> BeanD<O> getBeanDescriptor(Object bean) {
-        final Class<?> beanClass = Validate.notNull(bean, "bean").getClass();
-        final Map<Class<?>, Class<?>> classCache = validatorContext.getFactory().getUnwrappedClassCache();
-        Class<?> unwrappedClass = classCache.get(beanClass);
-        if (unwrappedClass == null) {
-            unwrappedClass = Proxies.classFor(beanClass);
-            classCache.putIfAbsent(beanClass, unwrappedClass);
-        }
-        return (BeanD<O>) validatorContext.getDescriptorManager().getBeanDescriptor(unwrappedClass);
+        final Class<? extends Object> t = Proxies.classFor(Validate.notNull(bean, "bean").getClass());
+        return (BeanD<O>) validatorContext.getDescriptorManager().getBeanDescriptor(t);
     }
 
     final ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,
@@ -621,7 +612,7 @@ public abstract class ValidationJob<T> {
         return maybeResults.isPresent() ? maybeResults.get().size() : 0;
     }
 
-    private String interpolate(String messageTemplate, MessageInterpolator.Context context) {
+    private final String interpolate(String messageTemplate, MessageInterpolator.Context context) {
         try {
             return validatorContext.getMessageInterpolator().interpolate(messageTemplate, context);
         } catch (ValidationException e) {

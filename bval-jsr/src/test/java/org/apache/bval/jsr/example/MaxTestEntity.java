@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.example;
 
-import jakarta.validation.constraints.Max;
+import javax.validation.constraints.Max;
 import java.math.BigDecimal;
 
 /**
