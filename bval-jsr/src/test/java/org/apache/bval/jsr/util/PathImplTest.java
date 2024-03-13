@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
-import jakarta.validation.Path;
-import jakarta.validation.ValidationException;
+import javax.validation.Path;
+import javax.validation.ValidationException;
 
 import org.junit.Test;
 

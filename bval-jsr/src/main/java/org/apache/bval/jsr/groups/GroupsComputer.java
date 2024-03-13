@@ -29,11 +29,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.validation.GroupDefinitionException;
-import jakarta.validation.GroupSequence;
-import jakarta.validation.ValidationException;
-import jakarta.validation.groups.Default;
-import jakarta.validation.metadata.GroupConversionDescriptor;
+import javax.validation.GroupDefinitionException;
+import javax.validation.GroupSequence;
+import javax.validation.ValidationException;
+import javax.validation.groups.Default;
+import javax.validation.metadata.GroupConversionDescriptor;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
@@ -70,10 +70,6 @@ public class GroupsComputer {
     @SafeVarargs
     public final Groups computeGroups(Class<?>... groups) {
         Exceptions.raiseIf(groups == null, IllegalArgumentException::new, "null validation groups specified");
-
-        if (groups.length == 0 || (groups.length == 1 && groups[0] == Default.class)) {
-            return DEFAULT_GROUPS;
-        }
         return computeGroups(Arrays.asList(groups));
     }
 
@@ -135,7 +131,7 @@ public class GroupsComputer {
     public Groups computeGroups(Collection<Class<?>> groups) {
         Validate.notNull(groups, "groups");
 
-        if (groups.isEmpty() || (groups.size() == 1 && groups.contains(Default.class))) {
+        if (groups.isEmpty() || Arrays.asList(DEFAULT_GROUP).equals(new ArrayList<>(groups))) {
             return DEFAULT_GROUPS;
         }
         return computeGroups(groups.stream());

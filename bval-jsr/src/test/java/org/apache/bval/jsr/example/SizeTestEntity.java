@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.example;
 
-import jakarta.validation.constraints.Size;
+import javax.validation.constraints.Size;
 import java.util.Collection;
 import java.util.Map;
 

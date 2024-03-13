@@ -30,10 +30,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.validation.ConstraintDeclarationException;
-import jakarta.validation.ElementKind;
-import jakarta.validation.Valid;
-import jakarta.validation.executable.ValidateOnExecution;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ElementKind;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ContainerDelegate;
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ElementDelegate;
@@ -52,19 +52,13 @@ class Liskov {
 
             @Override
             public boolean test(Map<Meta<?>, Set<ValidationElement>> detectedValidationElements) {
-                Class<?> declaringType = null;
+                boolean lowestFound = false;
 
-                for (Map.Entry<Meta<?>, Set<ValidationElement>> e : detectedValidationElements.entrySet()){
-                    final Class<?> t = e.getKey().getDeclaringClass();
-                    if (declaringType != null) {
-                        if (declaringType.isAssignableFrom(t)) {
-                            continue;
-                        }
+                for (Set<ValidationElement> validated : detectedValidationElements.values()) {
+                    if (lowestFound) {
                         return false;
                     }
-                    if (!e.getValue().isEmpty()){
-                        declaringType = t;
-                    }
+                    lowestFound = !validated.isEmpty();
                 }
                 return true;
             }
@@ -73,34 +67,16 @@ class Liskov {
 
             @Override
             public boolean test(Map<Meta<?>, Set<ValidationElement>> detectedValidationElements) {
-                if (detectedValidationElements.size() < 2) {
-                    // no unrelated hierarchy possible
+                final Set<Class<?>> interfaces = detectedValidationElements.keySet().stream().map(Meta::getDeclaringClass)
+                        .filter(Class::isInterface).collect(Collectors.toSet());
+                if (interfaces.isEmpty()) {
                     return true;
                 }
-                final Map<Class<?>, Set<ValidationElement>> interfaceValidation = new LinkedHashMap<>();
-                detectedValidationElements.forEach((k,v)->{
-                    final Class<?> t = k.getDeclaringClass();
-                    if (t.isInterface()){
-                        interfaceValidation.put(t, v);
-                    }
-                });
-                if (interfaceValidation.isEmpty()) {
-                    // if all are classes, there can be no unrelated types in the hierarchy:
-                    return true;
-                }
-                // verify that all types can be assigned to the constrained interfaces:
-                for (Meta<?> meta : detectedValidationElements.keySet()) {
-                    final Class<?> t = meta.getDeclaringClass();
-                    for (Map.Entry<Class<?>, Set<ValidationElement>> e : interfaceValidation.entrySet()) {
-                        if (t.equals(e.getKey()) || e.getValue().isEmpty()) {
-                            continue;
-                        }
-                        if (!e.getKey().isAssignableFrom(t)) {
-                            return false;
-                        }
-                    }
-                }
-                return true;
+                final boolean allRelated =
+                    detectedValidationElements.keySet().stream().map(Meta::getDeclaringClass).allMatch(ifc -> interfaces
+                        .stream().filter(Predicate.isEqual(ifc).negate()).allMatch(ifc2 -> related(ifc, ifc2)));
+
+                return allRelated;
             }
         };
         //@formatter:on
@@ -146,7 +122,7 @@ class Liskov {
 
             // pre-check return value overridden hierarchy:
             Stream.of(StrengtheningIssue.values())
-                .filter(si -> !(si == StrengtheningIssue.overriddenHierarchy
+                .filter((Predicate<? super StrengtheningIssue>) si -> !(si == StrengtheningIssue.overriddenHierarchy
                     && detectedValidationElements.values().stream().filter(s -> !s.isEmpty()).count() < 2))
                 .forEach(si -> si.check(detectedValidationElements));
 

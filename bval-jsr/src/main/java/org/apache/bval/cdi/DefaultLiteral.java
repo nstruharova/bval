@@ -18,7 +18,7 @@
  */
 package org.apache.bval.cdi;
 
-import jakarta.enterprise.inject.Default;
+import javax.enterprise.inject.Default;
 
 public class DefaultLiteral extends EmptyAnnotationLiteral<Default> implements Default {
     private static final long serialVersionUID = 1L;

@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import jakarta.validation.ElementKind;
-import jakarta.validation.ParameterNameProvider;
+import javax.validation.ElementKind;
+import javax.validation.ParameterNameProvider;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.groups.GroupConversion;
@@ -334,10 +334,8 @@ public class HierarchyBuilder extends CompositeBuilder {
             return (MetadataBuilder.ForBean<T>) delegates.get(0);
         }
         // pretend:
-        // note: stream split for java 11 compilation
-        final Stream<MetadataBuilder.ForBean<T>> forBeanStream = delegates.stream()
-                .map(MetadataBuilder.ForBean.class::cast);
-        return forBeanStream.collect(compose());
+        return delegates.stream().<MetadataBuilder.ForBean<T>> map(MetadataBuilder.ForBean.class::cast)
+            .collect(compose());
     }
 
     @Override
@@ -347,7 +345,7 @@ public class HierarchyBuilder extends CompositeBuilder {
         @SuppressWarnings("unchecked")
         final Function<MetadataBuilder.ForElement<E>, Meta<E>> keyMapper =
             d -> Optional.of(d).filter(HierarchyDelegate.class::isInstance).map(HierarchyDelegate.class::cast)
-                .map(HierarchyDelegate::getHierarchyElement).map(Meta.class::cast).orElse(meta);
+                .map(HierarchyDelegate::getHierarchyElement).orElse(meta);
 
         return composite.delegates.stream().collect(Collectors.toMap(keyMapper, d -> d.getDeclaredConstraints(meta),
             (u, v) -> Stream.of(u, v).flatMap(Stream::of).toArray(Annotation[]::new), LinkedHashMap::new));

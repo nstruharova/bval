@@ -31,27 +31,26 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiPredicate;
 
-import jakarta.annotation.Priority;
-import jakarta.enterprise.inject.spi.AnnotatedMethod;
-import jakarta.enterprise.inject.spi.AnnotatedType;
-import jakarta.enterprise.inject.spi.CDI;
-import jakarta.inject.Inject;
-import jakarta.interceptor.AroundConstruct;
-import jakarta.interceptor.AroundInvoke;
-import jakarta.interceptor.Interceptor;
-import jakarta.interceptor.InterceptorBinding;
-import jakarta.interceptor.InvocationContext;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Validator;
-import jakarta.validation.executable.ExecutableType;
-import jakarta.validation.executable.ExecutableValidator;
-import jakarta.validation.executable.ValidateOnExecution;
-import jakarta.validation.metadata.ConstructorDescriptor;
-import jakarta.validation.metadata.MethodDescriptor;
+import javax.annotation.Priority;
+import javax.enterprise.inject.spi.AnnotatedMethod;
+import javax.enterprise.inject.spi.AnnotatedType;
+import javax.enterprise.inject.spi.CDI;
+import javax.inject.Inject;
+import javax.interceptor.AroundConstruct;
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.Interceptor;
+import javax.interceptor.InterceptorBinding;
+import javax.interceptor.InvocationContext;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
+import javax.validation.executable.ExecutableType;
+import javax.validation.executable.ExecutableValidator;
+import javax.validation.executable.ValidateOnExecution;
+import javax.validation.metadata.ConstructorDescriptor;
+import javax.validation.metadata.MethodDescriptor;
 
 import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.metadata.Signature;
@@ -97,7 +96,6 @@ public class BValInterceptor implements Serializable {
     private BValExtension globalConfiguration;
 
     private transient volatile ExecutableValidator executableValidator;
-    private transient volatile ConcurrentMap<Class<?>, Class<?>> classMapping;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @AroundConstruct // TODO: see previous one
@@ -136,7 +134,7 @@ public class BValInterceptor implements Serializable {
     @AroundInvoke
     public Object invoke(final InvocationContext context) throws Exception {
         final Method method = context.getMethod();
-        final Class<?> targetClass = getTargetClass(context);
+        final Class<?> targetClass = Proxies.classFor(context.getTarget().getClass());
 
         if (!isExecutableValidated(targetClass, method, this::computeIsMethodValidated)) {
             return context.proceed();
@@ -169,24 +167,8 @@ public class BValInterceptor implements Serializable {
         return result;
     }
 
-    private Class<?> getTargetClass(final InvocationContext context) {
-        final Class<?> key = context.getTarget().getClass();
-        if (classMapping == null) {
-            synchronized (this) {
-                if (classMapping == null) {
-                    classMapping = new ConcurrentHashMap<>();
-                }
-            }
-        }
-        Class<?> mapped = classMapping.get(key);
-        if (mapped == null) {
-            mapped = Proxies.classFor(key);
-            classMapping.putIfAbsent(key, mapped);
-        }
-        return mapped;
-    }
-
-    private <T> boolean isConstructorValidated(final Constructor<T> constructor) {
+    private <T> boolean isConstructorValidated(final Constructor<T> constructor)
+        {
         return isExecutableValidated(constructor.getDeclaringClass(), constructor, this::computeIsConstructorValidated);
     }
 

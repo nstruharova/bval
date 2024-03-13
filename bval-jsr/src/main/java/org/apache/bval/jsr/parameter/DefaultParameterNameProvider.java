@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.validation.ParameterNameProvider;
+import javax.validation.ParameterNameProvider;
 
 public class DefaultParameterNameProvider implements ParameterNameProvider {
 

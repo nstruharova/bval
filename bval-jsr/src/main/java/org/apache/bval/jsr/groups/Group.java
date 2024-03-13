@@ -29,11 +29,12 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import jakarta.validation.GroupDefinitionException;
-import jakarta.validation.groups.Default;
+import javax.validation.GroupDefinitionException;
+import javax.validation.groups.Default;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.ObjectWrapper;
+import org.apache.bval.util.Validate;
 
 /**
  * Immutable object that wraps an interface representing a single group.
@@ -127,7 +128,7 @@ public final class Group implements GroupStrategy {
      * @param group
      */
     public Group(Class<?> group) {
-        this.group = group;
+        this.group = Validate.notNull(group);
     }
 
     /**

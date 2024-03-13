@@ -18,9 +18,9 @@
  */
 package org.apache.bval.constraints;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
-import jakarta.validation.constraints.NotBlank;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.constraints.NotBlank;
 
 /**
  * Validate {@link NotBlank} for {@link CharSequence}.

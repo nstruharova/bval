@@ -18,14 +18,14 @@
  */
 package org.apache.bval.cdi;
 
-import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.enterprise.inject.spi.Annotated;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.enterprise.inject.spi.InjectionPoint;
-import jakarta.enterprise.inject.spi.InjectionTarget;
-import jakarta.enterprise.inject.spi.PassivationCapable;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.spi.Annotated;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.InjectionPoint;
+import javax.enterprise.inject.spi.InjectionTarget;
+import javax.enterprise.inject.spi.PassivationCapable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
 import java.lang.reflect.Type;
@@ -53,8 +53,7 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
         q.add(AnyLiteral.INSTANCE);
         qualifiers = Collections.unmodifiableSet(q);
 
-        injectionTarget = bm.getInjectionTargetFactory(bm.createAnnotatedType(BValInterceptor.class))
-                            .createInjectionTarget(null); // todo should it be this instead?
+        injectionTarget = bm.createInjectionTarget(bm.createAnnotatedType(BValInterceptor.class));
         injectionPoints = Collections.singleton(InjectionPoint.class
             .cast(new BValInterceptorInjectionPoint(this, injectionTarget.getInjectionPoints().iterator().next())));
     }
@@ -77,6 +76,11 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
     @Override
     public String getName() {
         return null;
+    }
+
+    @Override
+    public boolean isNullable() {
+        return false;
     }
 
     @Override

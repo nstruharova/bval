@@ -18,27 +18,22 @@
  */
 package org.apache.bval.jsr.groups.inheritance;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Set;
-
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
-
+import junit.framework.TestCase;
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.util.TestUtils;
-import org.junit.Before;
-import org.junit.Test;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import java.util.Set;
 
 /**
  * Description: <br/>
  */
-public class GroupInheritanceTest {
+public class GroupInheritanceTest extends TestCase {
     private Validator validator;
 
-    @Before
-    public void setUp() {
+    @Override
+    protected void setUp() {
         validator = ApacheValidatorFactory.getDefault().getValidator();
     }
 
@@ -49,7 +44,6 @@ public class GroupInheritanceTest {
      *  * @NotNull on defaultCreditCard</pre>
      * because Default and Billable are superinterfaces of BuyInOneClick.
      */
-    @Test
     public void testValidGroupBuyInOneClick() {
         BillableUser user = new BillableUser();
 

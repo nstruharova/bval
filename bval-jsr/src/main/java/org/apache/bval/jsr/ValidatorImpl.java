@@ -23,10 +23,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ValidationException;
-import jakarta.validation.executable.ExecutableValidator;
-import jakarta.validation.metadata.BeanDescriptor;
+import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
+import javax.validation.executable.ExecutableValidator;
+import javax.validation.metadata.BeanDescriptor;
 
 import org.apache.bval.jsr.job.ValidationJobFactory;
 import org.apache.bval.util.Validate;
@@ -127,11 +127,15 @@ public class ValidatorImpl implements CascadingPropertyValidator, ExecutableVali
         if (cons == null) {
             throw new ValidationException("Cannot instantiate " + cls);
         }
-        Reflection.makeAccessible(cons);
+        final boolean mustUnset = Reflection.setAccessible(cons, true);
         try {
             return cons.newInstance(validatorContext);
         } catch (final Exception ex) {
             throw new ValidationException("Cannot instantiate " + cls, ex);
+        } finally {
+            if (mustUnset) {
+                Reflection.setAccessible(cons, false);
+            }
         }
     }
 }

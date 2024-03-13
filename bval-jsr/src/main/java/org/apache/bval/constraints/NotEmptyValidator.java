@@ -18,25 +18,22 @@
  */
 package org.apache.bval.constraints;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
-import jakarta.validation.constraints.NotEmpty;
-
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * {@link ConstraintValidator} implementation for {@link NotEmpty}.
- * Additionally, check the non-emptiness of an
- * any object that has a public isEmpty():boolean or a valid toString() method.
+ * Description:  Check the non emptiness of an
+ * any object that has a public isEmpty():boolean or a valid toString() method
  */
-public class NotEmptyValidator implements ConstraintValidator<jakarta.validation.constraints.NotEmpty, Object> {
+public class NotEmptyValidator implements ConstraintValidator<javax.validation.constraints.NotEmpty, Object> {
 
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
         if (value == null) {
-            return false;
+            return true;
         }
         if (value.getClass().isArray()) {
             return Array.getLength(value) > 0;

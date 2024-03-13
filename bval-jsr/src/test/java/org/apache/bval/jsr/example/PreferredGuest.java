@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.example;
 
-import jakarta.validation.constraints.Digits;
+import javax.validation.constraints.Digits;
 
 public class PreferredGuest extends Customer {
     @Digits(integer = 10, fraction = 0)

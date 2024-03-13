@@ -21,7 +21,7 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import jakarta.validation.metadata.ExecutableDescriptor;
+import javax.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
@@ -141,8 +141,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
     @Override
     protected boolean hasWork() {
-        final ExecutableDescriptor descriptor = describe();
-        return descriptor != null && descriptor.hasConstrainedReturnValue();
+        return describe() != null;
     }
 
     protected abstract ExecutableDescriptor describe();

@@ -19,7 +19,7 @@ package org.apache.bval.extras.constraints.checkdigit;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import jakarta.validation.ConstraintValidator;
+import javax.validation.ConstraintValidator;
 import java.lang.annotation.Annotation;
 
 /**

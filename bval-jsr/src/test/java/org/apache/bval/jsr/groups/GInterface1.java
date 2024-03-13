@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.groups;
 
-import jakarta.validation.GroupSequence;
+import javax.validation.GroupSequence;
 
 /**
  * Description: <br/>

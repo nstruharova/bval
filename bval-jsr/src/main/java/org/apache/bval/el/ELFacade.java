@@ -16,70 +16,58 @@
  */
 package org.apache.bval.el;
 
+import javax.el.ArrayELResolver;
+import javax.el.BeanELResolver;
+import javax.el.CompositeELResolver;
+import javax.el.ELContext;
+import javax.el.ELResolver;
+import javax.el.ExpressionFactory;
+import javax.el.FunctionMapper;
+import javax.el.ListELResolver;
+import javax.el.MapELResolver;
+import javax.el.ResourceBundleELResolver;
+import javax.el.ValueExpression;
+import javax.el.VariableMapper;
 import java.lang.reflect.Method;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.el.ArrayELResolver;
-import jakarta.el.BeanELResolver;
-import jakarta.el.CompositeELResolver;
-import jakarta.el.ELContext;
-import jakarta.el.ELResolver;
-import jakarta.el.ExpressionFactory;
-import jakarta.el.FunctionMapper;
-import jakarta.el.ListELResolver;
-import jakarta.el.MapELResolver;
-import jakarta.el.ResourceBundleELResolver;
-import jakarta.el.ValueExpression;
-import jakarta.el.VariableMapper;
-
-import org.apache.bval.jsr.util.LookBehindRegexHolder;
-
 // ELProcessor or JavaEE 7 would be perfect too but this impl can be used in javaee 6
 public final class ELFacade implements MessageEvaluator {
-    private enum EvaluationType {
-        IMMEDIATE("\\$"), DEFERRED("#");
-
-        /**
-         * {@link LookBehindRegexHolder} to recognize a non-escaped EL
-         * expression of this evaluation type, hallmarked by a trigger
-         * character.
-         */
-        private final LookBehindRegexHolder regex;
-
-        private EvaluationType(String trigger) {
-            this.regex = new LookBehindRegexHolder(
-                String.format("(?<!(?:^|[^\\\\])(?:\\\\\\\\){0,%%d}\\\\)%s\\{", trigger), n -> (n - 3) / 2);
+    private static final ExpressionFactory EXPRESSION_FACTORY;
+    static {
+        ExpressionFactory ef;
+        try {
+            ef = ExpressionFactory.newInstance();
+        } catch (final Exception e) {
+            ef = null;
         }
+        EXPRESSION_FACTORY = ef;
     }
-
     private static final ELResolver RESOLVER = initResolver();
-
-    private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
 
     @Override
     public String interpolate(final String message, final Map<String, Object> annotationParameters,
         final Object validatedValue) {
-        // BVAL-170: simple pre-check to improve performance
-        if (message.contains("${")) {
-            try {
+        try {
+            if (EXPRESSION_FACTORY != null) {
                 final BValELContext context = new BValELContext();
                 final VariableMapper variables = context.getVariableMapper();
                 annotationParameters.forEach(
-                    (k, v) -> variables.setVariable(k, expressionFactory.createValueExpression(v, Object.class)));
+                    (k, v) -> variables.setVariable(k, EXPRESSION_FACTORY.createValueExpression(v, Object.class)));
 
                 variables.setVariable("validatedValue",
-                    expressionFactory.createValueExpression(validatedValue, Object.class));
+                    EXPRESSION_FACTORY.createValueExpression(validatedValue, Object.class));
 
-                // Java Bean Validation does not support EL expressions that look like JSP "deferred" expressions
-                return expressionFactory.createValueExpression(context,
-                    EvaluationType.DEFERRED.regex.matcher(message).replaceAll("\\$0"), String.class).getValue(context)
-                    .toString();
-            } catch (final Exception e) {
-                // no-op
+                // #{xxx} shouldn't be evaluated
+                return EXPRESSION_FACTORY.createValueExpression(context, message.replace("#{", "\\#{"), String.class)
+                    .getValue(context).toString();
             }
+        } catch (final Exception e) {
+            // no-op
         }
+
         return message;
     }
 
@@ -93,7 +81,7 @@ public final class ELFacade implements MessageEvaluator {
         return resolver;
     }
 
-    private class BValELContext extends ELContext {
+    private static class BValELContext extends ELContext {
         private final FunctionMapper functions = new BValFunctionMapper();
         private final VariableMapper variables = new BValVariableMapper();
 
@@ -120,13 +108,13 @@ public final class ELFacade implements MessageEvaluator {
         }
     }
 
-    private class BValVariableMapper extends VariableMapper {
+    private static class BValVariableMapper extends VariableMapper {
         private final Map<String, ValueExpression> variables = new HashMap<String, ValueExpression>();
 
         @Override
         public ValueExpression resolveVariable(final String variable) {
             if ("formatter".equals(variable)) {
-                return expressionFactory.createValueExpression(new BValFormatter(), Object.class);
+                return EXPRESSION_FACTORY.createValueExpression(new BValFormatter(), Object.class);
             }
             return variables.get(variable);
         }

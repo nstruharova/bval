@@ -36,27 +36,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.validation.Constraint;
-import jakarta.validation.ConstraintDeclarationException;
-import jakarta.validation.ConstraintDefinitionException;
-import jakarta.validation.ConstraintTarget;
-import jakarta.validation.OverridesAttribute;
-import jakarta.validation.Payload;
-import jakarta.validation.ValidationException;
-import jakarta.validation.constraintvalidation.ValidationTarget;
+import javax.validation.Constraint;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
+import javax.validation.OverridesAttribute;
+import javax.validation.Payload;
+import javax.validation.ValidationException;
+import javax.validation.constraintvalidation.ValidationTarget;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes.Worker;
 import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
 import org.apache.bval.jsr.metadata.Meta;
+import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
@@ -107,8 +107,8 @@ public class AnnotationsManager {
         }
     }
 
-    private class Composition {
-        <A extends Annotation> Optional<ConstraintAnnotationAttributes.Worker<A>> validWorker(
+    private static class Composition {
+        static <A extends Annotation> Optional<ConstraintAnnotationAttributes.Worker<A>> validWorker(
             ConstraintAnnotationAttributes attr, Class<A> type) {
             return Optional.of(type).map(attr::analyze).filter(Worker::isValid);
         }
@@ -179,7 +179,7 @@ public class AnnotationsManager {
                 final int index =
                     constraintCounts.computeIfAbsent(c.annotationType(), k -> new AtomicInteger()).getAndIncrement();
 
-                final AnnotationProxyBuilder<Annotation> proxyBuilder = buildProxyFor(c);
+                final AnnotationProxyBuilder<Annotation> proxyBuilder = new AnnotationProxyBuilder<>(c);
 
                 proxyBuilder.setGroups(groups);
                 proxyBuilder.setPayload(payload);
@@ -209,11 +209,15 @@ public class AnnotationsManager {
 
         Stream.of(Reflection.getDeclaredMethods(a.annotationType())).filter(m -> m.getParameterCount() == 0)
             .forEach(m -> {
-                Reflection.makeAccessible(m);
+                final boolean mustUnset = Reflection.setAccessible(m, true);
                 try {
                     result.get().put(m.getName(), m.invoke(a));
                 } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     Exceptions.raise(ValidationException::new, e, "Caught exception reading attributes of %s", a);
+                } finally {
+                    if (mustUnset) {
+                        Reflection.setAccessible(m, false);
+                    }
                 }
             });
         return result.optional().map(Collections::unmodifiableMap).orElseGet(Collections::emptyMap);
@@ -277,6 +281,7 @@ public class AnnotationsManager {
         }
         return constraints.toArray(Annotation[]::new);
     }
+    
 
     private static Optional<AnnotatedElement> substitute(AnnotatedElement e) {
         if (e instanceof Parameter) {
@@ -304,14 +309,20 @@ public class AnnotationsManager {
     }
 
     private final ApacheValidatorFactory validatorFactory;
-    private final ConcurrentMap<Class<?>, Composition> compositions;
-    private final ConcurrentMap<Class<?>, Method[]> constraintAttributes;
+    private final LRUCache<Class<? extends Annotation>, Composition> compositions;
 
     public AnnotationsManager(ApacheValidatorFactory validatorFactory) {
         super();
         this.validatorFactory = Validate.notNull(validatorFactory);
-        compositions = new ConcurrentHashMap<>();
-        constraintAttributes = new ConcurrentHashMap<>();
+        final String cacheSize =
+            validatorFactory.getProperties().get(ConfigurationImpl.Properties.CONSTRAINTS_CACHE_SIZE);
+        try {
+            compositions = new LRUCache<>(Integer.parseInt(cacheSize));
+        } catch (NumberFormatException e) {
+            throw Exceptions.create(IllegalStateException::new, e,
+                "Cannot parse value %s for configuration property %s", cacheSize,
+                ConfigurationImpl.Properties.CONSTRAINTS_CACHE_SIZE);
+        }
     }
 
     public void validateConstraintDefinition(Class<? extends Annotation> type) {
@@ -401,16 +412,6 @@ public class AnnotationsManager {
         }
         return s.flatMap(Collection::stream)
             .collect(Collectors.toCollection(() -> EnumSet.noneOf(ValidationTarget.class)));
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <A extends Annotation> AnnotationProxyBuilder<A> buildProxyFor(Class<A> type) {
-        return new AnnotationProxyBuilder<>(type, constraintAttributes);
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <A extends Annotation> AnnotationProxyBuilder<A> buildProxyFor(A instance) {
-        return new AnnotationProxyBuilder<>(instance, constraintAttributes);
     }
 
     private Composition getComposition(Class<? extends Annotation> annotationType) {

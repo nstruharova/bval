@@ -30,9 +30,9 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import jakarta.validation.Constraint;
-import jakarta.validation.OverridesAttribute;
-import jakarta.validation.Payload;
+import javax.validation.Constraint;
+import javax.validation.OverridesAttribute;
+import javax.validation.Payload;
 
 /**
  * <pre>
@@ -44,12 +44,12 @@ import jakarta.validation.Payload;
 @Constraint(validatedBy = {})
 @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
 @Retention(RUNTIME)
-@jakarta.validation.constraints.NotEmpty
+@javax.validation.constraints.NotEmpty
 @Deprecated
 public @interface NotEmpty {
     Class<?>[] groups() default {};
 
-    @OverridesAttribute(constraint = jakarta.validation.constraints.NotEmpty.class, name = "message")
+    @OverridesAttribute(constraint = javax.validation.constraints.NotEmpty.class, name = "message")
     String message() default "{org.apache.bval.constraints.NotEmpty.message}";
 
     Class<? extends Payload>[] payload() default {};

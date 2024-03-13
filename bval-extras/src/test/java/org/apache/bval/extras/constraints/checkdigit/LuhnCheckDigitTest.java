@@ -16,7 +16,7 @@
  */
 package org.apache.bval.extras.constraints.checkdigit;
 
-import jakarta.validation.ConstraintValidator;
+import javax.validation.ConstraintValidator;
 import java.lang.annotation.Annotation;
 
 /**

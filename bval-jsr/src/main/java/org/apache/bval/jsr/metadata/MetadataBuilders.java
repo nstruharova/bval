@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.validation.ValidationException;
+import javax.validation.ValidationException;
 
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.util.Exceptions;

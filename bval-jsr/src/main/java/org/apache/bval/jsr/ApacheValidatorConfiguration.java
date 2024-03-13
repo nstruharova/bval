@@ -18,9 +18,9 @@
  */
 package org.apache.bval.jsr;
 
-import jakarta.validation.Configuration;
-import jakarta.validation.ValidatorFactory;
-import jakarta.validation.spi.ConfigurationState;
+import javax.validation.Configuration;
+import javax.validation.ValidatorFactory;
+import javax.validation.spi.ConfigurationState;
 
 /**
  * Description: Uniquely identify Apache BVal in the Bean Validation bootstrap
@@ -46,13 +46,8 @@ public interface ApacheValidatorConfiguration extends Configuration<ApacheValida
         String VALIDATOR_FACTORY_CLASSNAME = "apache.bval.validator-factory-classname";
 
         /**
-         * Specifies whether EL evaluation is permitted in non-default message
-         * templates. By default this feature is disabled; if you enable it you
-         * should ensure that no constraint validator builds violations using
-         * message templates containing unchecked text (e.g. the validated
-         * value). To do otherwise is to expose your system to potential
-         * injection attacks.
+         * Size to use for caching of constraint-related information. Default is {@code 50}.
          */
-        String CUSTOM_TEMPLATE_EXPRESSION_EVALUATION = "apache.bval.custom-template-expression-evaluation";
+        String CONSTRAINTS_CACHE_SIZE = "apache.bval.constraints-cache-size";
     }
 }
